@@ -1,0 +1,12 @@
+# https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure.html
+
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/
+file_exists_behavior: OVERWRITE
+hooks:
+  AfterInstall:
+    - location: AfterInstallHook.sh
+      timeout: 300
