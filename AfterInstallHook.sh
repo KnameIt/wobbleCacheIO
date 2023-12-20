@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
-cd /home/ubuntu/socket-io-starter
+cd /home/ubuntu/test
+npm install
 npm run start
