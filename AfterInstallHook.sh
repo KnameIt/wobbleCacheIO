@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 cd /home/ubuntu/test
-npm install
-npm run start
+sudo npm install
+sudo npm run start
