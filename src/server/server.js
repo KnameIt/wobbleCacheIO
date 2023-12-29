@@ -688,6 +688,9 @@ io.on('connection', (socket) => {
         });
     
         // console.log('searchParamsQuery: ', searchParamsQuery);
+        let autosearchGlobalCacheResults = await autosearchGlobalCache(searchParamsQuery);
+        socket.emit('searchResults', autosearchGlobalCacheResults);
+        // socket.emit('searchEvent', autosearchGlobalCacheResults);
         return autosearchGlobalCache(searchParamsQuery);
     
     
@@ -747,7 +750,9 @@ io.on('connection', (socket) => {
     
           wobbleCache.items = globalCacheAssets;
           // console.log('wobbleCache: ', wobbleCache);
+          socket.emit('searchResults', wobbleCache);
           const wobbleCacheKey = await sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey);
+          socket.emit('wobbleCacheKey', wobbleCacheKey);
           console.log('wobbleCacheKey: ', await wobbleCacheKey);
           return await wobbleCacheKey.insertedId;
     
@@ -808,15 +813,15 @@ io.on('connection', (socket) => {
     
     
           wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-    
+          socket.emit('searchResults', wobbleCache);
           const wobbleCacheKey = await sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey);
-    
+          socket.emit('wobbleCacheKey', wobbleCacheKey);
           console.log('sending to Global Cache');
     
           Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(error => {
             console.error('Error sending data to OpenSearch Global Cache:', error);
           });
-    
+          // socket.emit('wobbleCacheKey', wobbleCacheKey);
           console.log('wobbleCacheKey:1 ', wobbleCacheKey);
           return wobbleCacheKey.insertedId;
         }
