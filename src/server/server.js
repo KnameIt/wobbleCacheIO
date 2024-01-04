@@ -4,10 +4,10 @@ const cors = require('cors');
 
 const server = http.createServer();
 const io = socketIO(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-      }
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"]
+	}
 });
 
 
@@ -188,6 +188,7 @@ async function searchOpenSearchGlobalCache(endpoint, lockLists, event) {
 		console.log('Search response:', response.body.hits.hits.length);
 		let searchResults = response.body.hits.hits;
 		const searchResultsSource = extractSourceContent(searchResults);
+		// socket.emit('searchResults', searchResultsSource);
 		return searchResultsSource;
 	} catch (error) {
 		console.error('Error during search:', error);
@@ -516,6 +517,7 @@ async function apiSearch(missingAssets) {
 						// console.log('responseBuffer: ', responseBuffer);
 						const resultData = JSON.parse(responseBuffer.toString('utf8'));
 						// console.log('functionARN event response data ', resultData);
+						socket.emit('searchResults', resultData);
 						return resultData;
 					})
 					.catch((err) => {
@@ -659,184 +661,184 @@ async function sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobb
 // app.use(cors());
 
 io.on('connection', (socket) => {
-    console.log('A user connected');
+	console.log('A user connected');
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
+	socket.on('disconnect', () => {
+		console.log('User disconnected');
+	});
 
-    // Listen for the 'sendMessage' event from the client
-    socket.on('sendMessage', (data) => {
-        console.log('Message received from client:', data);
+	// Listen for the 'sendMessage' event from the client
+	socket.on('sendMessage', (data) => {
+		console.log('Message received from client:', data);
 
-        // Emit a response event back to the client
-        socket.emit('messageReceived', { message: 'Message received on the server!' });
-    });
+		// Emit a response event back to the client
+		socket.emit('messageReceived', { message: 'Message received on the server!' });
+	});
 
 
-    socket.on('searchEvent', async (event) => {
-      if (event.searchGlobalCache === true) {
+	socket.on('searchEvent', async (event) => {
+		if (event.searchGlobalCache === true) {
 
-        // grab the params from event.searchParams and construct a query for openSearch
-    
-        let searchParams = event.searchParams;
-        let searchParamsKeys = Object.keys(searchParams);
-    
-        let searchParamsQuery = '';
-        searchParamsKeys.forEach(key => {
-          searchParamsQuery += `${key}=${searchParams[key]}&`;
-        });
-    
-        // console.log('searchParamsQuery: ', searchParamsQuery);
-        let autosearchGlobalCacheResults = await autosearchGlobalCache(searchParamsQuery);
-        socket.emit('searchResults', autosearchGlobalCacheResults);
-        // socket.emit('searchEvent', autosearchGlobalCacheResults);
-        return autosearchGlobalCache(searchParamsQuery);
-    
-    
-      } else {
-    
-    
-    
-    
-        let wobbleCacheMode = event.wobbleCacheMode;
-        // Initiate the final return object
-        let globalCacheResults = {};
-        let wobbleCache = {};
-        let missingAssets = [];
-        let globalCacheAssets = [];
-        let suppliedWobbleCacheKey = '';
-    
-        if (wobbleCacheMode === 'add') {
-          // Add to current Wobble Cache
-          // console.log('add to current Wobble Cache');
-          suppliedWobbleCacheKey = event.wobbleCacheKey;
-        } else if (wobbleCacheMode === 'replace') {
-          // Replace the current Wobble Cache
-          // console.log('Replace the current Wobble Cache');
-          suppliedWobbleCacheKey = event.wobbleCacheKey;
-        } else if (wobbleCacheMode === 'new') {
-          // Create a new Wobble Cache
-          // console.log('Create a new Wobble Cache');
-        }
-    
-        // Process the payload to understand what we need in return and create the call order for the Global Cache
-    
-        let whatWeNeed = await processWobbleCacheRequest(event);
-    
-        console.log('whatWeNeed: ', whatWeNeed);
-    
-        // Search Global Cache
-        globalCacheResults = await searchGlobalCache(whatWeNeed.endpoints, event);
-        globalCacheResults.globalCacheAssets = globalCacheResults;
-        globalCacheAssets = globalCacheResults.globalCacheAssets;
-        missingAssets = globalCacheResults.missingAssets;
-    
-    
-        // wobbleCache Object is created here
-        wobbleCache.assetsNeeded = whatWeNeed.assetsNeeded;
-        wobbleCache.ingredientCount = whatWeNeed.ingredientCount;
-        wobbleCache.gridCount = whatWeNeed.gridCount;
-        wobbleCache.preWobbleCount = whatWeNeed.preWobbleCount;
-        wobbleCache.userId = event.userId;
-        wobbleCache.clientId = event.clientId;
-        wobbleCache.projectId = event.projectId;
-        wobbleCache.activeTasteId = event.activeTasteId;
-        wobbleCache.searchId = event._id;
-    
-    
-        // we have enough in Global Cache
-        if (globalCacheAssets.length >= whatWeNeed.assetsNeeded) {
-    
-          wobbleCache.items = globalCacheAssets;
-          // console.log('wobbleCache: ', wobbleCache);
-          socket.emit('searchResults', wobbleCache);
-          const wobbleCacheKey = await sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey);
-          socket.emit('wobbleCacheKey', wobbleCacheKey);
-          console.log('wobbleCacheKey: ', await wobbleCacheKey);
-          return await wobbleCacheKey.insertedId;
-    
-        }
-    
-        // we don't have enough in Global Cache
-    
-        else {
-    
-          wobbleCache.items = globalCacheAssets;
-    
-    
-          // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
-    
-          let apiCacheResults = await apiSearch(missingAssets);
-          console.log('apiCacheResults: ', apiCacheResults);
-    
-          console.log('results', apiCacheResults[0].results);
-          let apiSearchResults = [];
-    
-    
-          console.log('hello')
-          apiCacheResults.forEach(apiResult => {
-    
-    
-            apiResult.results.forEach(singleResult => {
-    
-              const globalCacheItem = {};
-              globalCacheItem.id = apiResult.assetVendorId + '-' + singleResult.id;
-              globalCacheItem.src = singleResult.urls;
-              globalCacheItem.keywords = singleResult.tags
-              globalCacheItem.content = singleResult;
-              globalCacheItem.userId = event.userId;
-              globalCacheItem.searchId = event.searchId;
-              globalCacheItem.ingredientId = apiResult.ingredientId;
-              globalCacheItem.ingredientName = apiResult.ingredientName;
-              globalCacheItem.ingredientType = apiResult.ingredientType;
-              globalCacheItem.assetVendorId = apiResult.assetVendorId;
-              globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
-    
-    
-              // if it's a source image, we need to get the first url
-    
-    
-              if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-                globalCacheItem.src = singleResult.urls.regular;
-              } else if (apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"){
-                console.log('singleResult', singleResult.previews.live_site);
-                globalCacheItem.src = singleResult?.previews?.live_site?.url;
-              }
-              console.log('globalCacheItem', globalCacheItem);
-              apiSearchResults.push(globalCacheItem);
-            });
-    
-    
-          })
-    
-    
-    
-          wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-          socket.emit('searchResults', wobbleCache);
-          const wobbleCacheKey = await sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey);
-          socket.emit('wobbleCacheKey', wobbleCacheKey);
-          console.log('sending to Global Cache');
-    
-          Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(error => {
-            console.error('Error sending data to OpenSearch Global Cache:', error);
-          });
-          // socket.emit('wobbleCacheKey', wobbleCacheKey);
-          console.log('wobbleCacheKey:1 ', wobbleCacheKey);
-          return wobbleCacheKey.insertedId;
-        }
-        return wobbleCacheKey.insertedId;
-        console.log('saved to GlobalCache');
-    
-    
-    
-    
-      }
-      });
+			// grab the params from event.searchParams and construct a query for openSearch
+
+			let searchParams = event.searchParams;
+			let searchParamsKeys = Object.keys(searchParams);
+
+			let searchParamsQuery = '';
+			searchParamsKeys.forEach(key => {
+				searchParamsQuery += `${key}=${searchParams[key]}&`;
+			});
+
+			// console.log('searchParamsQuery: ', searchParamsQuery);
+			let autosearchGlobalCacheResults = await autosearchGlobalCache(searchParamsQuery);
+			socket.emit('searchResults', autosearchGlobalCacheResults);
+			// socket.emit('searchEvent', autosearchGlobalCacheResults);
+			return autosearchGlobalCache(searchParamsQuery);
+
+
+		} else {
+
+
+
+
+			let wobbleCacheMode = event.wobbleCacheMode;
+			// Initiate the final return object
+			let globalCacheResults = {};
+			let wobbleCache = {};
+			let missingAssets = [];
+			let globalCacheAssets = [];
+			let suppliedWobbleCacheKey = '';
+
+			if (wobbleCacheMode === 'add') {
+				// Add to current Wobble Cache
+				// console.log('add to current Wobble Cache');
+				suppliedWobbleCacheKey = event.wobbleCacheKey;
+			} else if (wobbleCacheMode === 'replace') {
+				// Replace the current Wobble Cache
+				// console.log('Replace the current Wobble Cache');
+				suppliedWobbleCacheKey = event.wobbleCacheKey;
+			} else if (wobbleCacheMode === 'new') {
+				// Create a new Wobble Cache
+				// console.log('Create a new Wobble Cache');
+			}
+
+			// Process the payload to understand what we need in return and create the call order for the Global Cache
+
+			let whatWeNeed = await processWobbleCacheRequest(event);
+
+			console.log('whatWeNeed: ', whatWeNeed);
+
+			// Search Global Cache
+			globalCacheResults = await searchGlobalCache(whatWeNeed.endpoints, event);
+			globalCacheResults.globalCacheAssets = globalCacheResults;
+			globalCacheAssets = globalCacheResults.globalCacheAssets;
+			missingAssets = globalCacheResults.missingAssets;
+
+
+			// wobbleCache Object is created here
+			wobbleCache.assetsNeeded = whatWeNeed.assetsNeeded;
+			wobbleCache.ingredientCount = whatWeNeed.ingredientCount;
+			wobbleCache.gridCount = whatWeNeed.gridCount;
+			wobbleCache.preWobbleCount = whatWeNeed.preWobbleCount;
+			wobbleCache.userId = event.userId;
+			wobbleCache.clientId = event.clientId;
+			wobbleCache.projectId = event.projectId;
+			wobbleCache.activeTasteId = event.activeTasteId;
+			wobbleCache.searchId = event._id;
+
+
+			// we have enough in Global Cache
+			if (globalCacheAssets.length >= whatWeNeed.assetsNeeded) {
+
+				wobbleCache.items = globalCacheAssets;
+				// console.log('wobbleCache: ', wobbleCache);
+				socket.emit('searchResults', wobbleCache);
+				const wobbleCacheKey = await sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey);
+				socket.emit('wobbleCacheKey', wobbleCacheKey);
+				console.log('wobbleCacheKey: ', await wobbleCacheKey);
+				return await wobbleCacheKey.insertedId;
+
+			}
+
+			// we don't have enough in Global Cache
+
+			else {
+
+				wobbleCache.items = globalCacheAssets;
+
+
+				// TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
+
+				let apiCacheResults = await apiSearch(missingAssets);
+				console.log('apiCacheResults: ', apiCacheResults);
+
+				console.log('results', apiCacheResults[0].results);
+				let apiSearchResults = [];
+
+
+				console.log('hello')
+				apiCacheResults.forEach(apiResult => {
+
+
+					apiResult.results.forEach(singleResult => {
+
+						const globalCacheItem = {};
+						globalCacheItem.id = apiResult.assetVendorId + '-' + singleResult.id;
+						globalCacheItem.src = singleResult.urls;
+						globalCacheItem.keywords = singleResult.tags
+						globalCacheItem.content = singleResult;
+						globalCacheItem.userId = event.userId;
+						globalCacheItem.searchId = event.searchId;
+						globalCacheItem.ingredientId = apiResult.ingredientId;
+						globalCacheItem.ingredientName = apiResult.ingredientName;
+						globalCacheItem.ingredientType = apiResult.ingredientType;
+						globalCacheItem.assetVendorId = apiResult.assetVendorId;
+						globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
+
+
+						// if it's a source image, we need to get the first url
+
+
+						if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+							globalCacheItem.src = singleResult.urls.regular;
+						} else if (apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2") {
+							console.log('singleResult', singleResult.previews.live_site);
+							globalCacheItem.src = singleResult?.previews?.live_site?.url;
+						}
+						console.log('globalCacheItem', globalCacheItem);
+						apiSearchResults.push(globalCacheItem);
+					});
+
+					// socket.emit('searchResults', apiResult);
+				})
+
+
+
+				wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
+				socket.emit('searchResults', wobbleCache);
+				const wobbleCacheKey = await sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey);
+				socket.emit('wobbleCacheKey', wobbleCacheKey);
+				console.log('sending to Global Cache');
+
+				Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(error => {
+					console.error('Error sending data to OpenSearch Global Cache:', error);
+				});
+				// socket.emit('wobbleCacheKey', wobbleCacheKey);
+				console.log('wobbleCacheKey:1 ', wobbleCacheKey);
+				return wobbleCacheKey.insertedId;
+			}
+			return wobbleCacheKey.insertedId;
+			console.log('saved to GlobalCache');
+
+
+
+
+		}
+	});
 });
 
 const PORT = process.env.PORT || 3005;
 
 server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+	console.log(`Server listening on port ${PORT}`);
 });
