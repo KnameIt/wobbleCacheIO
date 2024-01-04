@@ -22,7 +22,7 @@ fi
 # Install npm packages and start the application
 npm install
 
-# Check if CodeDeploy agent is installed and running
+# Check if CodeDeploy agent is installed and running..
 if ! sudo service codedeploy-agent status; then
     echo "CodeDeploy agent not found, installing..."
     sudo apt-get update
