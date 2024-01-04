@@ -21,4 +21,19 @@ fi
 
 # Install npm packages and start the application
 npm install
+
+# Check if CodeDeploy agent is installed and running
+if ! sudo service codedeploy-agent status; then
+    echo "CodeDeploy agent not found, installing..."
+    sudo apt-get update
+    sudo apt-get install -y ruby
+    cd /tmp
+    wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
+    chmod +x ./install
+    sudo ./install auto
+    sudo service codedeploy-agent start
+fi
+
+# Return to app directory and start the application
+cd /home/ubuntu/test
 npm run start
