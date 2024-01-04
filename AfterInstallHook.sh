@@ -20,7 +20,7 @@ fi
 
 # Change the owner of the directory
 sudo chown -R ubuntu:ubuntu /home/ubuntu/test
-
+sudo chown -R ubuntu:ubuntu /home/ubuntu/test/node_modules
 # Navigate to the directory
 cd /home/ubuntu/test
 
@@ -48,4 +48,4 @@ fi
 
 # Return to app directory and start the application
 cd /home/ubuntu/test
-npm run start
+pm2 start pm2.config.js
