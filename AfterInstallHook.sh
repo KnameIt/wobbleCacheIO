@@ -1,6 +1,18 @@
 #!/bin/bash
 source ~/.bashrc
 
+
+# Check if Node.js and npm are installed, if not, install them
+if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
+    echo "Node.js or npm not found, installing..."
+    curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+fi
+
+
+source /etc/profile
+
+
 # Ensure the directory /home/ubuntu/test exists
 if [ ! -d "/home/ubuntu/test" ]; then
   mkdir -p /home/ubuntu/test
@@ -16,7 +28,7 @@ cd /home/ubuntu/test
 if ! command -v pm2 &> /dev/null
 then
     echo "PM2 not found, installing..."
-    npm install -g pm2
+    sudo npm install -g pm2
 fi
 
 # Install npm packages and start the application
@@ -28,7 +40,7 @@ if ! sudo service codedeploy-agent status > /dev/null 2>&1; then
     sudo apt-get update
     sudo apt-get install -y ruby wget
     cd /tmp
-    wget https://aws-codedeploy-us-east-1.s3.us-easat-1.amazonaws.com/latest/install
+    wget https://aws-codedeploy-us-east-1.s3.us-east-1.amazonaws.com/latest/install
     chmod +x ./install
     sudo ./install auto
     sudo service codedeploy-agent start
