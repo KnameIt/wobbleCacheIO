@@ -197,7 +197,8 @@ async function searchOpenSearchGlobalCache(endpoint, lockLists, event) {
 
 
 
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 const GRAPHQL_ENDPOINT = process.env.API_KNAMEITSTORE_GRAPHQLAPIENDPOINTOUTPUT;
 const GRAPHQL_API_KEY = process.env.API_KNAMEITSTORE_GRAPHQLAPIKEYOUTPUT;
