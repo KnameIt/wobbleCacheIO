@@ -48,4 +48,5 @@ fi
 
 # Return to app directory and start the application
 cd /home/ubuntu/test
-pm2 start pm2.config.js
+# Restart (or start) the application using PM2
+pm2 reload pm2.config.js || pm2 start pm2.config.js
