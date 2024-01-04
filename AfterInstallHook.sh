@@ -23,12 +23,12 @@ fi
 npm install
 
 # Check if CodeDeploy agent is installed and running..
-if ! sudo service codedeploy-agent status; then
+if ! sudo service codedeploy-agent status > /dev/null 2>&1; then
     echo "CodeDeploy agent not found, installing..."
     sudo apt-get update
-    sudo apt-get install -y ruby
+    sudo apt-get install -y ruby wget
     cd /tmp
-    wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
+    wget https://aws-codedeploy-us-east-1.s3.us-easat-1.amazonaws.com/latest/install
     chmod +x ./install
     sudo ./install auto
     sudo service codedeploy-agent start
