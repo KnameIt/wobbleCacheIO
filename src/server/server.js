@@ -661,6 +661,23 @@ async function sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobb
 
 // app.use(cors());
 
+async function clientSocketLamda(clientParams) {
+	lambda.invoke(
+	  {
+		FunctionName: "clientSocketFunction-staging",
+		Payload: JSON.stringify(clientParams, null, 2), // pass params
+	  },
+	  function (error, data) {
+		if (error) {
+		  console.log("error", error);
+		}
+		if (data) {
+		  console.log(data);
+		}
+	  }
+	);
+  }
+
 io.on('connection', (socket) => {
 	console.log('A user connected');
 
@@ -676,9 +693,19 @@ io.on('connection', (socket) => {
 		socket.emit('messageReceived', { message: 'Message received on the server!' });
 	});
 
-
+	socket.on("unsplashoAuth", async (data) => {
+		console.log("unsplash event Response");
+		console.log(data);
+	});
+	
 	socket.on('searchEvent', async (event) => {
-		if (event.searchGlobalCache === true) {
+		if(event.hasOwnProperty("queryTerm")){
+			const clientParams = { ip: "34.236.146.26", port: 4000, rawPath: event.queryTerm };
+			console.log("this is query", event);
+
+			await clientSocketLamda(clientParams);
+		}
+		else if (event.searchGlobalCache === true) {
 
 			// grab the params from event.searchParams and construct a query for openSearch
 
