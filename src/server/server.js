@@ -700,7 +700,7 @@ io.on('connection', (socket) => {
 	
 	socket.on('searchEvent', async (event) => {
 		if(event.hasOwnProperty("queryTerm")){
-			const clientParams = { ip: "34.236.146.26", port: 4000, rawPath: event.queryTerm };
+			const clientParams = { ip: "34.203.199.165", port: 3000, rawPath: event.queryTerm };
 			console.log("this is query", event);
 
 			await clientSocketLamda(clientParams);
