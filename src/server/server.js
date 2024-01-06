@@ -670,11 +670,12 @@ async function clientSocketLamda(clientParams) {
 	});
 	
 	lambda.send(command).then((data) => {
-		console.log('Lambda response: ', data);
+		console.info('Lambda Response: ', data);
 	})
 	.catch((err) => {
 		console.error(err);
 	})
+	console.info("End of clientSocketLamda Method");
   }
 
 io.on('connection', (socket) => {
@@ -693,7 +694,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on("unsplashoAuth", async (data) => {
-		console.log("unsplash event Response");
+		console.log("Unsplash Event Response");
 		console.log(data);
 	});
 	
