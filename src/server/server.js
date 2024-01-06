@@ -662,20 +662,19 @@ async function sendToMongoWobbleCache(wobbleCache, wobbleCacheMode, suppliedWobb
 // app.use(cors());
 
 async function clientSocketLamda(clientParams) {
-	lambda.invoke(
-	  {
+	const payload = JSON.stringify(clientParams, null, 2);
+		const command = new InvokeCommand({
 		FunctionName: "clientSocketFunction-staging",
-		Payload: JSON.stringify(clientParams, null, 2), // pass params
-	  },
-	  function (error, data) {
-		if (error) {
-		  console.log("error", error);
-		}
-		if (data) {
-		  console.log(data);
-		}
-	  }
-	);
+		InvocationType: "RequestResponse",
+		Payload: payload,
+	});
+	
+	lambda.send(command).then((data) => {
+		console.log('Lambda response: ', data);
+	})
+	.catch((err) => {
+		console.error(err);
+	})
   }
 
 io.on('connection', (socket) => {
