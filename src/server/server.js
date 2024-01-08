@@ -472,7 +472,7 @@ async function getOAuthToken(missingAssetOrder) {
   }
 }
 
-async function apiSearch(missingAssets) {
+async function apiSearch(missingAssets, socket) {
   const promises = [];
   console.log("missingAssets: ", missingAssets);
 
@@ -503,7 +503,7 @@ async function apiSearch(missingAssets) {
             const responseBuffer = Buffer.from(data.Payload);
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
-            // console.log('functionARN event response data ', resultData);
+            console.log("functionARN event response data ", resultData);
             socket.emit("searchResults", resultData);
             return resultData;
           })
@@ -691,7 +691,7 @@ io.on("connection", (socket) => {
       console.log("this is query", event);
 
       let missingAssets = event.missingAsset;
-      let apiCacheResults = await apiSearch(missingAssets);
+      let apiCacheResults = await apiSearch(missingAssets, socket);
       console.log("apiCacheResults: ", apiCacheResults);
 
       return apiCacheResults;
