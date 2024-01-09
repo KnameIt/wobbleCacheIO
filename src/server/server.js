@@ -708,7 +708,8 @@ io.on("connection", (socket) => {
       // await clientSocketLamda(clientParams);
     } else if (event.searchGlobalCache === true) {
       // grab the params from event.searchParams and construct a query for openSearch
-
+      console.info("inside the searchGlobalCache....");
+      console.info("event: - ", event);
       let searchParams = event.searchParams;
       let searchParamsKeys = Object.keys(searchParams);
 
