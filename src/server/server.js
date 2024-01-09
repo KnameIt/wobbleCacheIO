@@ -475,7 +475,7 @@ async function getOAuthToken(missingAssetOrder) {
   }
 }
 
-async function apiSearch(missingAssets, socket) {
+async function apiSearch(missingAssets, wobbleCache, globalCacheAssets, wobbleCacheMode, suppliedWobbleCacheKey) {
   const promises = [];
 
   console.log("missingAssets: ", missingAssets);
@@ -483,7 +483,9 @@ async function apiSearch(missingAssets, socket) {
   for (let i = 0; i < missingAssets.length; i++) {
     const functionARN = missingAssets[i].liveLambdaARN;
     const missingAssetOrder = missingAssets[i];
-
+    missingAssetOrder.useData = JSON.stringify({wobbleCache,globalCacheAssets,wobbleCacheMode,suppliedWobbleCacheKey})
+    missingAssetOrder.ip = "34.203.199.165";
+    missingAssetOrder.port = "3000";
     if (missingAssetOrder.oAuthRequired) {
       const token = await getOAuthToken(missingAssetOrder);
       console.log("token: ", token);
@@ -508,7 +510,6 @@ async function apiSearch(missingAssets, socket) {
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
             console.log("functionARN event response data ", resultData);
-            socket.emit("lambdaResponse", resultData);
             socket.emit("searchResults", resultData);
             return resultData;
           })
@@ -664,6 +665,11 @@ async function clientSocketLamda(clientParams) {
   console.info("End of clientSocketLamda Method");
 }
 
+async function insertDB(apiCacheResults) {
+  console.log("apiCacheResults: ", apiCacheResults);
+  return "success"
+}
+
 io.on("connection", (socket) => {
   console.log("A user connected");
 
@@ -689,8 +695,8 @@ io.on("connection", (socket) => {
   socket.on("searchEvent", async (event) => {
     if (event.hasOwnProperty("queryTerm")) {
       const clientParams = {
-        ip: "34.203.199.165",
-        port: 3000,
+        ip: process.env.IP || "34.203.199.165",
+        port: process.env.PORT || 3005,
         rawPath: event.queryTerm,
       };
       console.log("this is query", event);
@@ -782,16 +788,12 @@ io.on("connection", (socket) => {
       // we don't have enough in Global Cache
       else {
         wobbleCache.items = globalCacheAssets;
-
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
-
-        let apiCacheResults = await apiSearch(missingAssets);
+        let apiCacheResults = await apiSearch(missingAssets, wobbleCache, globalCacheAssets, wobbleCacheMode, suppliedWobbleCacheKey);
         console.log("apiCacheResults: ", apiCacheResults);
 
         console.log("results", apiCacheResults[0].results);
         let apiSearchResults = [];
-
-        console.log("hello");
         apiCacheResults.forEach((apiResult) => {
           apiResult.results.forEach((singleResult) => {
             const globalCacheItem = {};
@@ -807,9 +809,7 @@ io.on("connection", (socket) => {
             globalCacheItem.ingredientType = apiResult.ingredientType;
             globalCacheItem.assetVendorId = apiResult.assetVendorId;
             globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
-
             // if it's a source image, we need to get the first url
-
             if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
               globalCacheItem.src = singleResult.urls.regular;
             } else if (
@@ -821,10 +821,8 @@ io.on("connection", (socket) => {
             console.log("globalCacheItem", globalCacheItem);
             apiSearchResults.push(globalCacheItem);
           });
-
           // socket.emit('searchResults', apiResult);
         });
-
         wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
         socket.emit("searchResults", wobbleCache);
         const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -853,6 +851,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lambdaResponse", async (data) => {
+    let insertRecords = await insertDB(data);
+    console.info("insertRecords ", insertRecords);
     console.log("lambdaResponse: ", data);
   });
 });

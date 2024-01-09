@@ -9,10 +9,12 @@ module.exports = {
         env: {
             NODE_ENV: 'development',
             PORT: 3002,
+            IP: "34.203.199.165",
         },
         env_production: {
             NODE_ENV: 'production',
             PORT: 3002,
+            IP: "34.203.199.165",
         },
     }],
 };
