@@ -475,7 +475,7 @@ async function getOAuthToken(missingAssetOrder) {
   }
 }
 
-async function apiSearch(missingAssets, wobbleCache, globalCacheAssets, wobbleCacheMode, suppliedWobbleCacheKey) {
+async function apiSearch(missingAssets) {
   const promises = [];
 
   console.log("missingAssets: ", missingAssets);
@@ -483,9 +483,8 @@ async function apiSearch(missingAssets, wobbleCache, globalCacheAssets, wobbleCa
   for (let i = 0; i < missingAssets.length; i++) {
     const functionARN = missingAssets[i].liveLambdaARN;
     const missingAssetOrder = missingAssets[i];
-    missingAssetOrder.useData = JSON.stringify({wobbleCache,globalCacheAssets,wobbleCacheMode,suppliedWobbleCacheKey})
-    missingAssetOrder.ip = "34.203.199.165";
-    missingAssetOrder.port = "3000";
+    missingAssetOrder.ip = process.env.IP || "34.203.199.165";
+    missingAssetOrder.port = process.env.PORT || 3005;
     if (missingAssetOrder.oAuthRequired) {
       const token = await getOAuthToken(missingAssetOrder);
       console.log("token: ", token);
@@ -672,7 +671,7 @@ async function insertDB(apiCacheResults) {
 
 io.on("connection", (socket) => {
   console.log("A user connected");
-
+  let serverStorage = {};  
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
@@ -788,8 +787,11 @@ io.on("connection", (socket) => {
       // we don't have enough in Global Cache
       else {
         wobbleCache.items = globalCacheAssets;
+        missingAssets.map((obj)=>{
+          serverStorage[obj.searchId] = {wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey}
+        })
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
-        let apiCacheResults = await apiSearch(missingAssets, wobbleCache, globalCacheAssets, wobbleCacheMode, suppliedWobbleCacheKey);
+        let apiCacheResults = await apiSearch(missingAssets);
         console.log("apiCacheResults: ", apiCacheResults);
 
         console.log("results", apiCacheResults[0].results);
@@ -851,8 +853,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lambdaResponse", async (data) => {
-    let insertRecords = await insertDB(data);
-    console.info("insertRecords ", insertRecords);
+    // let insertRecords = await insertDB(data);
+    console.log("lambdaResponse: ", data);
+    console.log("serverStorage: ", serverStorage[data.searchId])
+    // console.info("insertRecords ", insertRecords);
     console.log("lambdaResponse: ", data);
   });
 });
