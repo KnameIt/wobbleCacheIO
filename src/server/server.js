@@ -474,6 +474,9 @@ async function getOAuthToken(missingAssetOrder) {
 
 async function apiSearch(missingAssets, socket) {
   const promises = [];
+
+  const clientParams = { ip: "34.203.199.165", port: 3000 };
+
   console.log("missingAssets: ", missingAssets);
 
   for (let i = 0; i < missingAssets.length; i++) {
@@ -504,6 +507,7 @@ async function apiSearch(missingAssets, socket) {
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
             console.log("functionARN event response data ", resultData);
+            socket.emit("lambdaResponse", resultData);
             socket.emit("searchResults", resultData);
             return resultData;
           })
@@ -845,6 +849,10 @@ io.on("connection", (socket) => {
       return wobbleCacheKey.insertedId;
       console.log("saved to GlobalCache");
     }
+  });
+  
+  socket.on("lamdaResponse", (lamdaResponse) => {
+    console.log("lamdaResponse", lamdaResponse);
   });
 });
 
