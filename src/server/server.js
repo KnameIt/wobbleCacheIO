@@ -475,8 +475,6 @@ async function getOAuthToken(missingAssetOrder) {
 async function apiSearch(missingAssets, socket) {
   const promises = [];
 
-  const clientParams = { ip: "34.203.199.165", port: 3000 };
-
   console.log("missingAssets: ", missingAssets);
 
   for (let i = 0; i < missingAssets.length; i++) {
@@ -851,8 +849,8 @@ io.on("connection", (socket) => {
     }
   });
   
-  socket.on("lamdaResponse", (lamdaResponse) => {
-    console.log("lamdaResponse", lamdaResponse);
+  socket.on("lambdaResponse", (lamdaResponse) => {
+    console.log("lambdaResponse===> ", lamdaResponse);
   });
 });
 
