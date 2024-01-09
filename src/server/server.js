@@ -1,5 +1,8 @@
 const http = require("http");
-const socketIO = require("socket.io");
+const socketIO = require("socket.io", {
+  maxHttpBufferSize: 1e8,
+  pingTimeout: 60000,
+});
 const cors = require("cors");
 
 const server = http.createServer();
@@ -848,9 +851,9 @@ io.on("connection", (socket) => {
       console.log("saved to GlobalCache");
     }
   });
-  
-  socket.on("lambdaResponse", (lamdaResponse) => {
-    console.log("lambdaResponse===> ", lamdaResponse);
+
+  socket.on("lambdaResponse", async (data) => {
+    console.log("lambdaResponse: ", data);
   });
 });
 
