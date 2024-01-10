@@ -387,9 +387,11 @@ async function searchGlobalCache(whatWeNeed, event) {
         lockLists,
         event
       );
-
-      const responseLength = response.length;
-
+      
+      //1-10-24 testing
+      // const responseLength = response.length;
+      //1-10-24 testing
+        const responseLength = 0;
       // More than enough was found, we can push to globalCacheAssets
       if (responseLength > endpoint.needed) {
         // let cacheItems;
@@ -402,19 +404,21 @@ async function searchGlobalCache(whatWeNeed, event) {
       }
       // Not enough were found, we need to file missingAsset request
       else if (responseLength < endpoint.needed) {
-        var cacheItems = response;
-        cacheItems.forEach(function (item) {
-          item.searchId = endpoint.searchId;
-          item.ingredientType = endpoint.ingredientType;
-          item.ingredientId = endpoint.ingredientId;
-          item.ingredientName = endpoint.ingredientName;
-          item.needed = endpoint.needed;
-          item.supplied = responseLength;
-          item.vendorEndpointId = endpoint.vendorEndpointId;
-          item.userId = endpoint.userId;
-          item.cachingChoices = endpoint.cachingChoices[0];
-          globalCacheAssets.push(item);
-        });
+        //1-10-24 testing
+        // var cacheItems = response;
+        // cacheItems.forEach(function (item) {
+        //   item.searchId = endpoint.searchId;
+        //   item.ingredientType = endpoint.ingredientType;
+        //   item.ingredientId = endpoint.ingredientId;
+        //   item.ingredientName = endpoint.ingredientName;
+        //   item.needed = endpoint.needed;
+        //   item.supplied = responseLength;
+        //   item.vendorEndpointId = endpoint.vendorEndpointId;
+        //   item.userId = endpoint.userId;
+        //   item.cachingChoices = endpoint.cachingChoices[0];
+        //   globalCacheAssets.push(item);
+        // });
+        //1-10-24 testing
 
         endpoint.needed = endpoint.needed - responseLength;
         console.log("not enough: ", endpoint);
@@ -791,6 +795,7 @@ io.on("connection", (socket) => {
         missingAssets.map((obj)=>{
           serverStorage[obj.searchId] = {wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey}
         })
+        console.log("missingAssets 798: ", missingAssets);
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
         let apiCacheResults = await apiSearch(missingAssets);
         console.log("apiCacheResults: ", apiCacheResults);
