@@ -513,8 +513,8 @@ async function apiSearch(missingAssets, socket) {
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
             // console.log("functionARN event response data ", resultData);
-            // socket.emit("searchResults", resultData);
-            socket.emit("lambdaSend", resultData);
+            serverStorage[resultData.searchId]["results"] = resultData.results
+            socket.emit("searchResults", resultData);
             return resultData;
           })
           .catch((err) => {
