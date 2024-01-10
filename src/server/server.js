@@ -482,7 +482,7 @@ async function getOAuthToken(missingAssetOrder) {
 async function apiSearch(missingAssets, socket) {
   const promises = [];
 
-  console.log("missingAssets: ", missingAssets);
+  console.log("missingAssets: 485 ", missingAssets);
 
   for (let i = 0; i < missingAssets.length; i++) {
     const functionARN = missingAssets[i].liveLambdaARN;
@@ -508,12 +508,13 @@ async function apiSearch(missingAssets, socket) {
         lambda
           .send(command)
           .then((data) => {
-            // console.log('data: ', data.Payload);
+            console.log('data: 511 ', data);
             const responseBuffer = Buffer.from(data.Payload);
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
-            console.log("functionARN event response data ", resultData);
-            socket.emit("searchResults", resultData);
+            // console.log("functionARN event response data ", resultData);
+            // socket.emit("searchResults", resultData);
+            socket.emit("lambdaSend", resultData);
             return resultData;
           })
           .catch((err) => {
@@ -527,7 +528,6 @@ async function apiSearch(missingAssets, socket) {
 
   const results = await Promise.all(promises);
   console.log("results: ", results.length);
-  console.log("results: ", JSON.stringify(results));
   return results;
 }
 
@@ -669,7 +669,7 @@ async function clientSocketLamda(clientParams) {
 }
 
 async function insertDB(apiCacheResults) {
-  console.log("apiCacheResults: ", apiCacheResults);
+  console.log("apiCacheResults: 672 ", apiCacheResults);
   return "success"
 }
 
@@ -795,63 +795,67 @@ io.on("connection", (socket) => {
         missingAssets.map((obj)=>{
           serverStorage[obj.searchId] = {wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey}
         })
-        console.log("missingAssets 798: ", JSON.stringify(missingAssets));
+        console.log("missingAssets 798: ", JSON.stringify(serverStorage));
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
         let apiCacheResults = await apiSearch(missingAssets, socket);
         console.log("apiCacheResults: ", apiCacheResults);
 
-        console.log("results", apiCacheResults[0].results);
-        let apiSearchResults = [];
-        apiCacheResults.forEach((apiResult) => {
-          apiResult.results.forEach((singleResult) => {
-            const globalCacheItem = {};
-            globalCacheItem.id =
-              apiResult.assetVendorId + "-" + singleResult.id;
-            globalCacheItem.src = singleResult.urls;
-            globalCacheItem.keywords = singleResult.tags;
-            globalCacheItem.content = singleResult;
-            globalCacheItem.userId = event.userId;
-            globalCacheItem.searchId = event.searchId;
-            globalCacheItem.ingredientId = apiResult.ingredientId;
-            globalCacheItem.ingredientName = apiResult.ingredientName;
-            globalCacheItem.ingredientType = apiResult.ingredientType;
-            globalCacheItem.assetVendorId = apiResult.assetVendorId;
-            globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
-            // if it's a source image, we need to get the first url
-            if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-              globalCacheItem.src = singleResult.urls.regular;
-            } else if (
-              apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
-            ) {
-              console.log("singleResult", singleResult.previews.live_site);
-              globalCacheItem.src = singleResult?.previews?.live_site?.url;
-            }
-            console.log("globalCacheItem", globalCacheItem);
-            apiSearchResults.push(globalCacheItem);
-          });
-          // socket.emit('searchResults', apiResult);
-        });
-        wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-        socket.emit("searchResults", wobbleCache);
-        const wobbleCacheKey = await sendToMongoWobbleCache(
-          wobbleCache,
-          wobbleCacheMode,
-          suppliedWobbleCacheKey
-        );
-        socket.emit("wobbleCacheKey", wobbleCacheKey);
-        console.log("sending to Global Cache");
+        console.log("results", apiCacheResults[1]);
+        console.log("missingAssets 804: ", JSON.stringify(serverStorage));
+        return "test 804"
+        //1-10-24 testing
+        // let apiSearchResults = [];
+        // apiCacheResults.forEach((apiResult) => {
+        //   apiResult.results.forEach((singleResult) => {
+        //     const globalCacheItem = {};
+        //     globalCacheItem.id =
+        //       apiResult.assetVendorId + "-" + singleResult.id;
+        //     globalCacheItem.src = singleResult.urls;
+        //     globalCacheItem.keywords = singleResult.tags;
+        //     globalCacheItem.content = singleResult;
+        //     globalCacheItem.userId = event.userId;
+        //     globalCacheItem.searchId = event.searchId;
+        //     globalCacheItem.ingredientId = apiResult.ingredientId;
+        //     globalCacheItem.ingredientName = apiResult.ingredientName;
+        //     globalCacheItem.ingredientType = apiResult.ingredientType;
+        //     globalCacheItem.assetVendorId = apiResult.assetVendorId;
+        //     globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
+        //     // if it's a source image, we need to get the first url
+        //     if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+        //       globalCacheItem.src = singleResult.urls.regular;
+        //     } else if (
+        //       apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+        //     ) {
+        //       console.log("singleResult", singleResult.previews.live_site);
+        //       globalCacheItem.src = singleResult?.previews?.live_site?.url;
+        //     }
+        //     console.log("globalCacheItem", globalCacheItem);
+        //     apiSearchResults.push(globalCacheItem);
+        //   });
+        //   // socket.emit('searchResults', apiResult);
+        // });
+        // wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
+        // socket.emit("searchResults", wobbleCache);
+        // const wobbleCacheKey = await sendToMongoWobbleCache(
+        //   wobbleCache,
+        //   wobbleCacheMode,
+        //   suppliedWobbleCacheKey
+        // );
+        // socket.emit("wobbleCacheKey", wobbleCacheKey);
+        // console.log("sending to Global Cache");
 
-        Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
-          (error) => {
-            console.error(
-              "Error sending data to OpenSearch Global Cache:",
-              error
-            );
-          }
-        );
-        // socket.emit('wobbleCacheKey', wobbleCacheKey);
-        console.log("wobbleCacheKey:1 ", wobbleCacheKey);
-        return wobbleCacheKey.insertedId;
+        // Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
+        //   (error) => {
+        //     console.error(
+        //       "Error sending data to OpenSearch Global Cache:",
+        //       error
+        //     );
+        //   }
+        // );
+        // // socket.emit('wobbleCacheKey', wobbleCacheKey);
+        // console.log("wobbleCacheKey:1 ", wobbleCacheKey);
+        // return wobbleCacheKey.insertedId;
+        //1-10-24 testing
       }
       return wobbleCacheKey.insertedId;
       console.log("saved to GlobalCache");
@@ -860,10 +864,10 @@ io.on("connection", (socket) => {
 
   socket.on("lambdaResponse", async (data) => {
     // let insertRecords = await insertDB(data);
-    console.log("lambdaResponse: ", data);
+    console.log("lambdaResponse: 867 ", data);
     console.log("serverStorage: ", JSON.stringify(serverStorage[data.searchId]));
     // console.info("insertRecords ", insertRecords);
-    console.log("lambdaResponse: ", data);
+    console.log("lambdaResponse: 870 ", data);
   });
 });
 
