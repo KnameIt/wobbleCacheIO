@@ -478,8 +478,8 @@ async function getOAuthToken(missingAssetOrder) {
     return missingAssetOrder.oAuthToken;
   }
 }
-
-async function apiSearch(missingAssets) {
+//1-10-24 added socket in params
+async function apiSearch(missingAssets, socket) {
   const promises = [];
 
   console.log("missingAssets: ", missingAssets);
@@ -527,7 +527,7 @@ async function apiSearch(missingAssets) {
 
   const results = await Promise.all(promises);
   console.log("results: ", results.length);
-
+  console.log("results: ", JSON.stringify(results));
   return results;
 }
 
@@ -795,9 +795,9 @@ io.on("connection", (socket) => {
         missingAssets.map((obj)=>{
           serverStorage[obj.searchId] = {wobbleCache, wobbleCacheMode, suppliedWobbleCacheKey}
         })
-        console.log("missingAssets 798: ", missingAssets);
+        console.log("missingAssets 798: ", JSON.stringify(missingAssets));
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
-        let apiCacheResults = await apiSearch(missingAssets);
+        let apiCacheResults = await apiSearch(missingAssets, socket);
         console.log("apiCacheResults: ", apiCacheResults);
 
         console.log("results", apiCacheResults[0].results);
@@ -861,7 +861,7 @@ io.on("connection", (socket) => {
   socket.on("lambdaResponse", async (data) => {
     // let insertRecords = await insertDB(data);
     console.log("lambdaResponse: ", data);
-    console.log("serverStorage: ", serverStorage[data.searchId])
+    console.log("serverStorage: ", JSON.stringify(serverStorage[data.searchId]));
     // console.info("insertRecords ", insertRecords);
     console.log("lambdaResponse: ", data);
   });
