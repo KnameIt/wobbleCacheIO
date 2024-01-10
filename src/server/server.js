@@ -25,7 +25,7 @@ const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const lambda = new LambdaClient({ region: "us-east-1" });
 
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
-
+let serverStorage = {}; 
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -670,7 +670,7 @@ async function clientSocketLamda(clientParams) {
 
 async function insertDB(apiCacheResults) {
   console.log("missingAssets 672: ", JSON.stringify(serverStorage));
- 
+  return "test done"
 //  let apiSearchResults = [];
 //         apiCacheResults.forEach((apiResult) => {
 //           apiResult.results.forEach((singleResult) => {
@@ -725,8 +725,7 @@ async function insertDB(apiCacheResults) {
 }
 
 io.on("connection", (socket) => {
-  console.log("A user connected");
-  let serverStorage = {};  
+  console.log("A user connected"); 
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
