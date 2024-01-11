@@ -387,11 +387,11 @@ async function searchGlobalCache(whatWeNeed, event) {
         lockLists,
         event
       );
-      
+
       //1-10-24 testing
       // const responseLength = response.length;
       //1-10-24 testing
-        const responseLength = 0;
+      const responseLength = 0;
       // More than enough was found, we can push to globalCacheAssets
       if (responseLength > endpoint.needed) {
         // let cacheItems;
@@ -507,15 +507,14 @@ async function apiSearch(missingAssets, socket) {
       promises.push(
         lambda
           .send(command)
-          .then((data) => {
+          .then(async (data) => {
             const responseBuffer = Buffer.from(data.Payload);
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
             // console.log("functionARN event response data ", resultData);
-            if(serverStorage[resultData.searchId] != undefined){
-              serverStorage[resultData.searchId].results = resultData.results;
-            }
-            console.log("serverStorage: 516", serverStorage);
+            console.log("serverStorage: 515", serverStorage);
+            let insertRecords = await insertDB(socket, resultData);
+            console.log("insertRecords: ", insertRecords);
             socket.emit("searchResults", resultData);
             return resultData;
           })
@@ -670,68 +669,62 @@ async function clientSocketLamda(clientParams) {
   console.info("End of clientSocketLamda Method");
 }
 
-async function insertDB(socket, searchId, event) {
-  let apiCacheResults = serverStorage[searchId].results;
-  console.log("searchId: 675 ", searchId)
-  console.log("apiCacheResults: 676 ", apiCacheResults)
-  let wobbleCache = serverStorage[searchId].wobbleCache;
-  let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
-  let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
-  let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
+async function insertDB(socket, unsplashOauthResponse) {
+  let apiCacheResults = unsplashOauthResponse.results;
+  console.log("searchId: 674 ", JSON.stringify(unsplashOauthResponse));
+  console.log("apiCacheResults: 675 ", apiCacheResults);
+  let wobbleCache = serverStorage[unsplashOauthResponse.event.searchId].wobbleCache;
+  let wobbleCacheMode = serverStorage[unsplashOauthResponse.event.searchId].wobbleCacheMode;
+  let suppliedWobbleCacheKey = serverStorage[unsplashOauthResponse.event.searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets = serverStorage[unsplashOauthResponse.event.searchId].globalCacheAssets;
 
-   let apiSearchResults = [];
-   if(apiCacheResults != undefined){
-          apiCacheResults.forEach((apiResult) => {
-            apiResult.forEach((singleResult) => {
-              const globalCacheItem = {};
-              globalCacheItem.id =
-                apiResult.assetVendorId + "-" + singleResult.id;
-              globalCacheItem.src = singleResult.urls;
-              globalCacheItem.keywords = singleResult.tags;
-              globalCacheItem.content = singleResult;
-              globalCacheItem.userId = event.userId;
-              globalCacheItem.searchId = event.searchId;
-              globalCacheItem.ingredientId = apiResult.ingredientId;
-              globalCacheItem.ingredientName = apiResult.ingredientName;
-              globalCacheItem.ingredientType = apiResult.ingredientType;
-              globalCacheItem.assetVendorId = apiResult.assetVendorId;
-              globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
-              // if it's a source image, we need to get the first url
-              if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-                globalCacheItem.src = singleResult.urls.regular;
-              } else if (
-                apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
-              ) {
-                console.log("singleResult", singleResult.previews.live_site);
-                globalCacheItem.src = singleResult?.previews?.live_site?.url;
-              }
-              console.log("globalCacheItem", globalCacheItem);
-              apiSearchResults.push(globalCacheItem);
-            });
-            // socket.emit('searchResults', apiResult);
-          });
+  let apiSearchResults = [];
+  if (apiCacheResults != undefined) {
+    apiCacheResults.forEach((apiResult) => {
+      apiResult.forEach((singleResult) => {
+        const globalCacheItem = {};
+        globalCacheItem.id = apiResult.assetVendorId + "-" + singleResult.id;
+        globalCacheItem.src = singleResult.urls;
+        globalCacheItem.keywords = singleResult.tags;
+        globalCacheItem.content = singleResult;
+        globalCacheItem.userId = unsplashOauthResponse.event.userId;
+        globalCacheItem.searchId = unsplashOauthResponse.event.searchId;
+        globalCacheItem.ingredientId = apiResult.ingredientId;
+        globalCacheItem.ingredientName = apiResult.ingredientName;
+        globalCacheItem.ingredientType = apiResult.ingredientType;
+        globalCacheItem.assetVendorId = apiResult.assetVendorId;
+        globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
+        // if it's a source image, we need to get the first url
+        if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+          globalCacheItem.src = singleResult.urls.regular;
+        } else if (apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2") {
+          console.log("singleResult", singleResult.previews.live_site);
+          globalCacheItem.src = singleResult?.previews?.live_site?.url;
         }
-          wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-          socket.emit("searchResults", wobbleCache);
-          const wobbleCacheKey = await sendToMongoWobbleCache(
-            wobbleCache,
-            wobbleCacheMode,
-            suppliedWobbleCacheKey
-          );
-          socket.emit("wobbleCacheKey", wobbleCacheKey);
-          console.log("sending to Global Cache");
+        console.log("globalCacheItem", globalCacheItem);
+        apiSearchResults.push(globalCacheItem);
+      });
+      // socket.emit('searchResults', apiResult);
+    });
+  }
+  wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
+  socket.emit("searchResults", wobbleCache);
+  const wobbleCacheKey = await sendToMongoWobbleCache(
+    wobbleCache,
+    wobbleCacheMode,
+    suppliedWobbleCacheKey
+  );
+  socket.emit("wobbleCacheKey", wobbleCacheKey);
+  console.log("sending to Global Cache");
 
-          Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
-            (error) => {
-              console.error(
-                "Error sending data to OpenSearch Global Cache:",
-                error
-              );
-            }
-          );
-          // socket.emit('wobbleCacheKey', wobbleCacheKey);
-          console.log("wobbleCacheKey:1 ", wobbleCacheKey);
-          return wobbleCacheKey.insertedId;
+  Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
+    (error) => {
+      console.error("Error sending data to OpenSearch Global Cache:", error);
+    }
+  );
+  // socket.emit('wobbleCacheKey', wobbleCacheKey);
+  console.log("wobbleCacheKey:1 ", wobbleCacheKey);
+  return wobbleCacheKey.insertedId;
 }
 
 io.on("connection", (socket) => {
@@ -857,7 +850,7 @@ io.on("connection", (socket) => {
             wobbleCache,
             wobbleCacheMode,
             suppliedWobbleCacheKey,
-            globalCacheAssets
+            globalCacheAssets,
           };
         });
         // console.log("missingAssets 798: ", JSON.stringify(serverStorage));
@@ -926,8 +919,8 @@ io.on("connection", (socket) => {
 
   socket.on("lambdaResponse", async (data) => {
     console.log("data: 922 ", data);
-    let insertRecords = await insertDB(socket, data.event.searchId, data.event);
-    console.log("insertRecords: 920 ", insertRecords);
+    // let insertRecords = await insertDB(socket, data.event.searchId, data.event);
+    // console.log("insertRecords: 920 ", insertRecords);
     // console.log("lambdaResponse: 867 ", JSON.stringify(data));
     // console.log("serverStorage: ", JSON.stringify(serverStorage[data.searchId]));
   });
