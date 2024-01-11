@@ -513,14 +513,10 @@ async function apiSearch(missingAssets, socket) {
             // console.log('responseBuffer: ', responseBuffer);
             const resultData = JSON.parse(responseBuffer.toString("utf8"));
             // console.log("functionARN event response data ", resultData);
+            if(serverStorage[resultData.searchId] != undefined){
+              serverStorage[resultData.searchId].results = resultData.results;
+            }
             console.log("serverStorage: 516", serverStorage);
-            console.log("resultData: 517 ", resultData);
-            console.log("searchId: 518 ", resultData.searchId);
-            console.log(
-              "serverStorage: 517 ",
-              serverStorage[resultData.searchId]
-            );
-            serverStorage[resultData.searchId].results = resultData.results;
             socket.emit("searchResults", resultData);
             return resultData;
           })
