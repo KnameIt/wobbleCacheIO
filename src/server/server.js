@@ -510,7 +510,9 @@ async function apiSearch(missingAssets, socket) {
           .then(async (data) => {
             const responseBuffer = Buffer.from(data.Payload);
             // console.log('responseBuffer: ', responseBuffer);
+             //s-11-01-2024
             let resultData = await JSON.parse(responseBuffer.toString("utf8"));
+             //e-11-01-2024
             // console.log("functionARN event response data ", resultData);
             let insertRecords = await insertDB(socket, resultData);
             console.log("insertRecords: ", insertRecords);
@@ -668,32 +670,46 @@ async function clientSocketLamda(clientParams) {
   console.info("End of clientSocketLamda Method");
 }
 
+ //e-11-01-2024
 async function insertDB(socket, lambdaResponse) {
   let apiCacheResults = lambdaResponse.results;
+   //s-11-01-2024
   console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults.results[0]));
+   //e-11-01-2024
   console.log("event: 674 ", lambdaResponse.event);
   let wobbleCache = serverStorage[lambdaResponse.event.searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[lambdaResponse.event.searchId].suppliedWobbleCacheKey;
   let globalCacheAssets = serverStorage[lambdaResponse.event.searchId].globalCacheAssets;
+   //e-11-01-2024
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
+     //s-11-01-2024
     apiCacheResults.results.forEach((apiResult) => {
+    //e-11-01-2024
+
+      //s-11-01-2024
       // apiResult.forEach((singleResult) => {
-        const globalCacheItem = {};
+      //e-11-01-2024  
+      const globalCacheItem = {};
+      //s-11-01-2024
         globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
         globalCacheItem.src = apiResult.urls;
         globalCacheItem.keywords = apiResult.tags;
         globalCacheItem.content = apiResult;
+        //e-11-01-2024
         globalCacheItem.userId = lambdaResponse.event.userId;
         globalCacheItem.searchId = lambdaResponse.event.searchId;
+        //s-11-01-2024
         globalCacheItem.ingredientId = apiCacheResults.ingredientId;
         globalCacheItem.ingredientName = apiCacheResults.ingredientName;
         globalCacheItem.ingredientType = apiCacheResults.ingredientType;
         globalCacheItem.assetVendorId = apiCacheResults.assetVendorId;
         globalCacheItem.vendorEndpointId = apiCacheResults.vendorEndpointId;
+        //e-11-01-2024
         // if it's a source image, we need to get the first url
+  //s-11-01-2024
         if (apiCacheResults.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
           globalCacheItem.src = apiResult.urls.regular;
         } else if (apiCacheResults.vendorEndpointId === "clcecey82qevd0ake6o2v1id2") {
@@ -701,8 +717,10 @@ async function insertDB(socket, lambdaResponse) {
           globalCacheItem.src = apiResult?.previews?.live_site?.url;
         }
         console.log("globalCacheItem", globalCacheItem);
-        apiSearchResults.push(globalCacheItem);
+        apiSearchResults.push(globalCacheItem); 
       // });
+
+       //e-11-01-2024
       // socket.emit('searchResults', apiResult);
     });
   }
@@ -857,7 +875,7 @@ io.on("connection", (socket) => {
         let apiCacheResults = await apiSearch(missingAssets, socket);
         // console.log("missingAssets 804: ", JSON.stringify(serverStorage));
         return "test 804";
-        //1-10-24 testing
+        //11-01-24 testing
         // let apiSearchResults = [];
         // apiCacheResults.forEach((apiResult) => {
         //   apiResult.results.forEach((singleResult) => {
@@ -909,7 +927,7 @@ io.on("connection", (socket) => {
         // // socket.emit('wobbleCacheKey', wobbleCacheKey);
         // console.log("wobbleCacheKey:1 ", wobbleCacheKey);
         // return wobbleCacheKey.insertedId;
-        //1-10-24 testing
+        //11-01-24 testing
       }
       return wobbleCacheKey.insertedId;
       console.log("saved to GlobalCache");
@@ -918,8 +936,11 @@ io.on("connection", (socket) => {
 
   socket.on("lambdaResponse", async (data) => {
     console.log("data: 922 ", data);
+
+     //s-11-01-24 testing
     // let insertRecords = await insertDB(socket, data.event.searchId, data.event);
     // console.log("insertRecords: 920 ", insertRecords);
+     //e-11-01-24 testing
     // console.log("lambdaResponse: 867 ", JSON.stringify(data));
     // console.log("serverStorage: ", JSON.stringify(serverStorage[data.searchId]));
   });
