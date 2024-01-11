@@ -680,30 +680,29 @@ async function insertDB(socket, lambdaResponse) {
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
     apiCacheResults.results.forEach((apiResult) => {
-      console.log("apiResult: 683 ", apiResult);
-      apiResult.forEach((singleResult) => {
+      // apiResult.forEach((singleResult) => {
         const globalCacheItem = {};
-        globalCacheItem.id = apiResult.assetVendorId + "-" + singleResult.id;
-        globalCacheItem.src = singleResult.urls;
-        globalCacheItem.keywords = singleResult.tags;
-        globalCacheItem.content = singleResult;
+        globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
+        globalCacheItem.src = apiResult.urls;
+        globalCacheItem.keywords = apiResult.tags;
+        globalCacheItem.content = apiResult;
         globalCacheItem.userId = lambdaResponse.event.userId;
         globalCacheItem.searchId = lambdaResponse.event.searchId;
-        globalCacheItem.ingredientId = apiResult.ingredientId;
-        globalCacheItem.ingredientName = apiResult.ingredientName;
-        globalCacheItem.ingredientType = apiResult.ingredientType;
-        globalCacheItem.assetVendorId = apiResult.assetVendorId;
-        globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
+        globalCacheItem.ingredientId = apiCacheResults.ingredientId;
+        globalCacheItem.ingredientName = apiCacheResults.ingredientName;
+        globalCacheItem.ingredientType = apiCacheResults.ingredientType;
+        globalCacheItem.assetVendorId = apiCacheResults.assetVendorId;
+        globalCacheItem.vendorEndpointId = apiCacheResults.vendorEndpointId;
         // if it's a source image, we need to get the first url
-        if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-          globalCacheItem.src = singleResult.urls.regular;
-        } else if (apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2") {
-          console.log("singleResult", singleResult.previews.live_site);
-          globalCacheItem.src = singleResult?.previews?.live_site?.url;
+        if (apiCacheResults.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+          globalCacheItem.src = apiResult.urls.regular;
+        } else if (apiCacheResults.vendorEndpointId === "clcecey82qevd0ake6o2v1id2") {
+          console.log("apiResult", apiResult.previews.live_site);
+          globalCacheItem.src = apiResult?.previews?.live_site?.url;
         }
         console.log("globalCacheItem", globalCacheItem);
         apiSearchResults.push(globalCacheItem);
-      });
+      // });
       // socket.emit('searchResults', apiResult);
     });
   }
