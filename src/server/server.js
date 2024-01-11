@@ -671,8 +671,7 @@ async function clientSocketLamda(clientParams) {
 
 async function insertDB(socket, unsplashOauthResponse) {
   let apiCacheResults = unsplashOauthResponse.results;
-  console.log("searchId: 674 ", JSON.stringify(unsplashOauthResponse));
-  console.log("apiCacheResults: 675 ", apiCacheResults);
+  console.log("event: 674 ", unsplashOauthResponse.event);
   let wobbleCache = serverStorage[unsplashOauthResponse.event.searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[unsplashOauthResponse.event.searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[unsplashOauthResponse.event.searchId].suppliedWobbleCacheKey;
