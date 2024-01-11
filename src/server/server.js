@@ -675,8 +675,10 @@ async function insertDB(socket, searchId, event) {
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
 
    let apiSearchResults = [];
+   if(apiCacheResults != undefined){
           apiCacheResults.forEach((apiResult) => {
             apiResult.forEach((singleResult) => {
               const globalCacheItem = {};
@@ -706,6 +708,7 @@ async function insertDB(socket, searchId, event) {
             });
             // socket.emit('searchResults', apiResult);
           });
+        }
           wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
           socket.emit("searchResults", wobbleCache);
           const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -852,6 +855,7 @@ io.on("connection", (socket) => {
             wobbleCache,
             wobbleCacheMode,
             suppliedWobbleCacheKey,
+            globalCacheAssets
           };
         });
         // console.log("missingAssets 798: ", JSON.stringify(serverStorage));
