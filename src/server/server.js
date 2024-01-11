@@ -679,7 +679,7 @@ async function insertDB(socket, lambdaResponse) {
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
-    apiCacheResults.forEach((apiResult) => {
+    apiCacheResults.results.forEach((apiResult) => {
       apiResult.forEach((singleResult) => {
         const globalCacheItem = {};
         globalCacheItem.id = apiResult.assetVendorId + "-" + singleResult.id;
