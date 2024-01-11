@@ -672,6 +672,8 @@ async function clientSocketLamda(clientParams) {
 
 async function insertDB(socket, searchId, event) {
   let apiCacheResults = serverStorage[searchId].results;
+  console.log("searchId: 675 ", searchId)
+  console.log("apiCacheResults: 676 ", apiCacheResults)
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
