@@ -670,7 +670,7 @@ async function clientSocketLamda(clientParams) {
 
 async function insertDB(socket, lambdaResponse) {
   let apiCacheResults = lambdaResponse.results;
-  console.log("lambdaResonse: 673 ", lambdaResponse);
+  console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults.results[0]));
   console.log("event: 674 ", lambdaResponse.event);
   let wobbleCache = serverStorage[lambdaResponse.event.searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
@@ -680,6 +680,7 @@ async function insertDB(socket, lambdaResponse) {
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
     apiCacheResults.results.forEach((apiResult) => {
+      console.log("apiResult: 683 ", apiResult);
       apiResult.forEach((singleResult) => {
         const globalCacheItem = {};
         globalCacheItem.id = apiResult.assetVendorId + "-" + singleResult.id;
