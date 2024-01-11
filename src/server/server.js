@@ -510,9 +510,8 @@ async function apiSearch(missingAssets, socket) {
           .then(async (data) => {
             const responseBuffer = Buffer.from(data.Payload);
             // console.log('responseBuffer: ', responseBuffer);
-            const resultData = JSON.parse(responseBuffer.toString("utf8"));
+            let resultData = await JSON.parse(responseBuffer.toString("utf8"));
             // console.log("functionARN event response data ", resultData);
-            console.log("serverStorage: 515", serverStorage);
             let insertRecords = await insertDB(socket, resultData);
             console.log("insertRecords: ", insertRecords);
             socket.emit("searchResults", resultData);
@@ -669,13 +668,14 @@ async function clientSocketLamda(clientParams) {
   console.info("End of clientSocketLamda Method");
 }
 
-async function insertDB(socket, unsplashOauthResponse) {
-  let apiCacheResults = unsplashOauthResponse.results;
-  console.log("event: 674 ", unsplashOauthResponse.event);
-  let wobbleCache = serverStorage[unsplashOauthResponse.event.searchId].wobbleCache;
-  let wobbleCacheMode = serverStorage[unsplashOauthResponse.event.searchId].wobbleCacheMode;
-  let suppliedWobbleCacheKey = serverStorage[unsplashOauthResponse.event.searchId].suppliedWobbleCacheKey;
-  let globalCacheAssets = serverStorage[unsplashOauthResponse.event.searchId].globalCacheAssets;
+async function insertDB(socket, lambdaResponse) {
+  let apiCacheResults = lambdaResponse.results;
+  console.log("lambdaResonse: 673 ", lambdaResponse);
+  console.log("event: 674 ", lambdaResponse.event);
+  let wobbleCache = serverStorage[lambdaResponse.event.searchId].wobbleCache;
+  let wobbleCacheMode = serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
+  let suppliedWobbleCacheKey = serverStorage[lambdaResponse.event.searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets = serverStorage[lambdaResponse.event.searchId].globalCacheAssets;
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
@@ -686,8 +686,8 @@ async function insertDB(socket, unsplashOauthResponse) {
         globalCacheItem.src = singleResult.urls;
         globalCacheItem.keywords = singleResult.tags;
         globalCacheItem.content = singleResult;
-        globalCacheItem.userId = unsplashOauthResponse.event.userId;
-        globalCacheItem.searchId = unsplashOauthResponse.event.searchId;
+        globalCacheItem.userId = lambdaResponse.event.userId;
+        globalCacheItem.searchId = lambdaResponse.event.searchId;
         globalCacheItem.ingredientId = apiResult.ingredientId;
         globalCacheItem.ingredientName = apiResult.ingredientName;
         globalCacheItem.ingredientType = apiResult.ingredientType;
