@@ -933,12 +933,17 @@ io.on("connection", (socket) => {
       console.log("saved to GlobalCache");
     }
   });
-
-  ss(socket).on("lambdaResponse", async (stream, data) => {
-    console.log("data: 922 ", data);
-	console.log("stream: 939 ", stream);
+  const stream = ss.createStream();
+  ss(socket).on("lambdaResponse", (incomingStream) => {
+    incomingStream.pipe(stream);
+	incomingStream.on('end', ()=>{
+		console.log("data: 940", data)
+	})
 	// let insertRecords = await insertDB(socket, data);
   });
+  stream.on('data', (data)=>{
+	console.log("data: 947 ", data);
+  })
 });
 
 const PORT = process.env.PORT || 3005;
