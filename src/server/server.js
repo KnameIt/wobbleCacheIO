@@ -480,7 +480,7 @@ async function getOAuthToken(missingAssetOrder) {
 }
 //1-10-24 added socket in params
 async function apiSearch(missingAssets, socket) {
-  const promises = [];
+//   const promises = [];
 
   // console.log("missingAssets: 485 ", missingAssets);
 
@@ -495,7 +495,7 @@ async function apiSearch(missingAssets, socket) {
       missingAssetOrder.token = token;
     }
     if (functionARN) {
-      // console.log('functionARN: ', functionARN);
+      console.log('functionARN: 498 ', functionARN);
       //console.log('missingAssetOrder: ', missingAssetOrder);
       const payload = JSON.stringify(missingAssetOrder);
       const command = new InvokeCommand({
@@ -504,7 +504,7 @@ async function apiSearch(missingAssets, socket) {
         Payload: payload,
       });
 
-      promises.push(
+    //   promises.push(
         lambda
           .send(command)
           .then(async (data) => {
@@ -514,23 +514,23 @@ async function apiSearch(missingAssets, socket) {
             let resultData = await JSON.parse(responseBuffer.toString("utf8"));
              //e-11-01-2024
             // console.log("functionARN event response data ", resultData);
-            let insertRecords = await insertDB(socket, resultData);
-            console.log("insertRecords: ", insertRecords);
+            // let insertRecords = await insertDB(socket, resultData);
+            // console.log("insertRecords: ", insertRecords);
             socket.emit("searchResults", resultData);
             return resultData;
           })
           .catch((err) => {
             console.error(err);
           })
-      );
+    //   );
     } else {
       console.log("No functionARN");
     }
   }
 
-  const results = await Promise.all(promises);
-  console.log("results: ", results.length);
-  return results;
+//   const results = await Promise.all(promises);
+  console.log("lambda function call: 532 ");
+  return "lambda function call";
 }
 
 async function processWobbleCacheRequest(event) {
@@ -874,7 +874,7 @@ io.on("connection", (socket) => {
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
         let apiCacheResults = await apiSearch(missingAssets, socket);
         // console.log("missingAssets 804: ", JSON.stringify(serverStorage));
-        return "test 804";
+        return {status: 200, message: "success" };
         //11-01-24 testing
         // let apiSearchResults = [];
         // apiCacheResults.forEach((apiResult) => {
@@ -936,13 +936,7 @@ io.on("connection", (socket) => {
 
   socket.on("lambdaResponse", async (data) => {
     console.log("data: 922 ", data);
-
-     //s-11-01-24 testing
-    // let insertRecords = await insertDB(socket, data.event.searchId, data.event);
-    // console.log("insertRecords: 920 ", insertRecords);
-     //e-11-01-24 testing
-    // console.log("lambdaResponse: 867 ", JSON.stringify(data));
-    // console.log("serverStorage: ", JSON.stringify(serverStorage[data.searchId]));
+	// let insertRecords = await insertDB(socket, data);
   });
 });
 
