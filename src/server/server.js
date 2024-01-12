@@ -1,4 +1,5 @@
 const http = require("http");
+const { pipeline } = require('stream');
 const socketIO = require("socket.io", {
   maxHttpBufferSize: 1e8,
   pingTimeout: 60000,
@@ -933,17 +934,20 @@ io.on("connection", (socket) => {
       console.log("saved to GlobalCache");
     }
   });
-  const stream = ss.createStream();
-  ss(socket).on("lambdaResponse", (incomingStream) => {
-    incomingStream.pipe(stream);
-	incomingStream.on('end', ()=>{
-		console.log("data: 940", data)
-	})
-	// let insertRecords = await insertDB(socket, data);
-  });
-  stream.on('data', (data)=>{
-	console.log("data: 947 ", data);
-  })
+//   const stream = ss.createStream();
+//   ss(socket).on("lambdaResponse", (incomingStream) => {
+//     incomingStream.pipe(stream);
+// 	incomingStream.on('end', ()=>{
+// 		console.log("data: 940", data)
+// 	})
+// 	// let insertRecords = await insertDB(socket, data);
+//   });
+ss(socket).on("lambdaResponse", (stream) => {
+	pipeline(stream, process.stdout,  (err) => err && console.log(err))
+});
+//   stream.on('data', (data)=>{
+// 	console.log("data: 947 ", data);
+//   })
 });
 
 const PORT = process.env.PORT || 3005;
