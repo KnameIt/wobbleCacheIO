@@ -934,8 +934,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  ss(socket).on("lambdaResponse", async (data) => {
+  ss(socket).on("lambdaResponse", async (stream, data) => {
     console.log("data: 922 ", data);
+	console.log("stream: 939 ", stream);
 	// let insertRecords = await insertDB(socket, data);
   });
 });
