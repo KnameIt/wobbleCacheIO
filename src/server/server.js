@@ -863,6 +863,10 @@ io.on('connection', (socket) => {
 
 		}
 	});
+
+  socket.on("lambdaResponse", (data)=>{
+     console.log("data: ", data);
+  })
 });
 
 const PORT = process.env.PORT || 3005;
