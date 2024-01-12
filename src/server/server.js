@@ -1,5 +1,6 @@
 const http = require("http");
-const { pipeline } = require('stream');
+// const { pipeline } = require('stream');
+const JSONStream = require('JSONStream');
 const socketIO = require("socket.io", {
   maxHttpBufferSize: 1e8,
   pingTimeout: 60000,
@@ -943,7 +944,17 @@ io.on("connection", (socket) => {
 // 	// let insertRecords = await insertDB(socket, data);
 //   });
 ss(socket).on("lambdaResponse", (stream) => {
-	pipeline(stream, process.stdout,  (err) => err && console.log(err))
+	// Create a writable stream on the client side to receive the JSON data
+    const jsonStream = JSONStream.parse();
+    // ss(socket).on('data', (stream, data) => {
+      stream.pipe(jsonStream);
+    // });
+
+    // Handle the parsed JSON data when it arrives
+    jsonStream.on('data', (jsonObject) => {
+      console.log('Received JSON Object:', jsonObject);
+    });
+	// pipeline(stream, process.stdout,  (err) => err && console.log(err))
 });
 //   stream.on('data', (data)=>{
 // 	console.log("data: 947 ", data);
