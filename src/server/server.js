@@ -676,6 +676,8 @@ async function clientSocketLamda(clientParams) {
 
 //e-11-01-2024
 async function insertDB(socket, lambdaResponse) {
+  console.log("Come inside the inserDB=========================>");
+  return;
   let apiCacheResults = lambdaResponse.results;
   //s-11-01-2024
   console.log(
@@ -995,6 +997,8 @@ io.on("connection", (socket) => {
         apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[length - 1]
       )
     );
+
+    insertDB();
   });
 
   //   const stream = ss.createStream();
