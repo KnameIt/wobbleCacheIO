@@ -1,6 +1,4 @@
 const http = require("http");
-// const { pipeline } = require('stream');
-// const JSONStream = require("JSONStream");
 const socketIO = require("socket.io", {
   maxHttpBufferSize: 1e8,
   pingTimeout: 60000,
@@ -392,10 +390,9 @@ async function searchGlobalCache(whatWeNeed, event) {
         event
       );
 
-      //1-10-24 testing
-      // const responseLength = response.length;
-      //1-10-24 testing
-      const responseLength = 0;
+
+      const responseLength = response.length;
+
       // More than enough was found, we can push to globalCacheAssets
       if (responseLength > endpoint.needed) {
         // let cacheItems;
@@ -408,21 +405,19 @@ async function searchGlobalCache(whatWeNeed, event) {
       }
       // Not enough were found, we need to file missingAsset request
       else if (responseLength < endpoint.needed) {
-        //1-10-24 testing
-        // var cacheItems = response;
-        // cacheItems.forEach(function (item) {
-        //   item.searchId = endpoint.searchId;
-        //   item.ingredientType = endpoint.ingredientType;
-        //   item.ingredientId = endpoint.ingredientId;
-        //   item.ingredientName = endpoint.ingredientName;
-        //   item.needed = endpoint.needed;
-        //   item.supplied = responseLength;
-        //   item.vendorEndpointId = endpoint.vendorEndpointId;
-        //   item.userId = endpoint.userId;
-        //   item.cachingChoices = endpoint.cachingChoices[0];
-        //   globalCacheAssets.push(item);
-        // });
-        //1-10-24 testing
+        var cacheItems = response;
+        cacheItems.forEach(function (item) {
+          item.searchId = endpoint.searchId;
+          item.ingredientType = endpoint.ingredientType;
+          item.ingredientId = endpoint.ingredientId;
+          item.ingredientName = endpoint.ingredientName;
+          item.needed = endpoint.needed;
+          item.supplied = responseLength;
+          item.vendorEndpointId = endpoint.vendorEndpointId;
+          item.userId = endpoint.userId;
+          item.cachingChoices = endpoint.cachingChoices[0];
+          globalCacheAssets.push(item);
+        });
 
         endpoint.needed = endpoint.needed - responseLength;
         console.log("not enough: ", endpoint);
@@ -482,7 +477,7 @@ async function getOAuthToken(missingAssetOrder) {
     return missingAssetOrder.oAuthToken;
   }
 }
-//1-10-24 added socket in params
+//13-01-24 update
 async function apiSearch(missingAssets, socket) {
   //   const promises = [];
 
@@ -499,7 +494,7 @@ async function apiSearch(missingAssets, socket) {
       missingAssetOrder.token = token;
     }
     if (functionARN) {
-      console.log("functionARN: 498 ", functionARN);
+      console.log("functionARN: ", functionARN);
       //console.log('missingAssetOrder: ', missingAssetOrder);
       const payload = JSON.stringify(missingAssetOrder);
       const command = new InvokeCommand({
@@ -673,89 +668,10 @@ async function clientSocketLamda(clientParams) {
     });
   console.info("End of clientSocketLamda Method");
 }
-
-//e-11-01-2024
+//13-01-24
 async function insertDB(socket, lambdaResponse) {
-  console.log("Come inside the inserDB=========================>");
+  console.log("payload ready to insert in mongoDB...");
   return;
-  let apiCacheResults = lambdaResponse.results;
-  //s-11-01-2024
-  console.log(
-    "lambdaResonse: 673 ",
-    JSON.stringify(apiCacheResults.results[0])
-  );
-  //e-11-01-2024
-  console.log("event: 674 ", lambdaResponse.event);
-  let wobbleCache = serverStorage[lambdaResponse.event.searchId].wobbleCache;
-  let wobbleCacheMode =
-    serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
-  let suppliedWobbleCacheKey =
-    serverStorage[lambdaResponse.event.searchId].suppliedWobbleCacheKey;
-  let globalCacheAssets =
-    serverStorage[lambdaResponse.event.searchId].globalCacheAssets;
-  //e-11-01-2024
-
-  let apiSearchResults = [];
-  if (apiCacheResults != undefined) {
-    //s-11-01-2024
-    apiCacheResults.results.forEach((apiResult) => {
-      //e-11-01-2024
-
-      //s-11-01-2024
-      // apiResult.forEach((singleResult) => {
-      //e-11-01-2024
-      const globalCacheItem = {};
-      //s-11-01-2024
-      globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
-      globalCacheItem.src = apiResult.urls;
-      globalCacheItem.keywords = apiResult.tags;
-      globalCacheItem.content = apiResult;
-      //e-11-01-2024
-      globalCacheItem.userId = lambdaResponse.event.userId;
-      globalCacheItem.searchId = lambdaResponse.event.searchId;
-      //s-11-01-2024
-      globalCacheItem.ingredientId = apiCacheResults.ingredientId;
-      globalCacheItem.ingredientName = apiCacheResults.ingredientName;
-      globalCacheItem.ingredientType = apiCacheResults.ingredientType;
-      globalCacheItem.assetVendorId = apiCacheResults.assetVendorId;
-      globalCacheItem.vendorEndpointId = apiCacheResults.vendorEndpointId;
-      //e-11-01-2024
-      // if it's a source image, we need to get the first url
-      //s-11-01-2024
-      if (apiCacheResults.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-        globalCacheItem.src = apiResult.urls.regular;
-      } else if (
-        apiCacheResults.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
-      ) {
-        console.log("apiResult", apiResult.previews.live_site);
-        globalCacheItem.src = apiResult?.previews?.live_site?.url;
-      }
-      console.log("globalCacheItem", globalCacheItem);
-      apiSearchResults.push(globalCacheItem);
-      // });
-
-      //e-11-01-2024
-      // socket.emit('searchResults', apiResult);
-    });
-  }
-  wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  socket.emit("searchResults", wobbleCache);
-  const wobbleCacheKey = await sendToMongoWobbleCache(
-    wobbleCache,
-    wobbleCacheMode,
-    suppliedWobbleCacheKey
-  );
-  socket.emit("wobbleCacheKey", wobbleCacheKey);
-  console.log("sending to Global Cache");
-
-  Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
-    (error) => {
-      console.error("Error sending data to OpenSearch Global Cache:", error);
-    }
-  );
-  // socket.emit('wobbleCacheKey', wobbleCacheKey);
-  console.log("wobbleCacheKey:1 ", wobbleCacheKey);
-  return wobbleCacheKey.insertedId;
 }
 
 io.on("connection", (socket) => {
@@ -876,6 +792,7 @@ io.on("connection", (socket) => {
       // we don't have enough in Global Cache
       else {
         wobbleCache.items = globalCacheAssets;
+        //13-01-24
         missingAssets.map((obj) => {
           serverStorage[obj.searchId] = {
             wobbleCache,
@@ -948,14 +865,11 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("lamdaResponse", async (data) => {
-    // console.log("come to the lamda response ====================>", data);
+  //13-01-24
+  socket.on("lambdaResponse", async (data) => {
     const SEARCH_ID = Object.keys(data)[0];
 
-    // console.log("this is search id ", SEARCH_ID);
-
     if (apiData.hasOwnProperty(SEARCH_ID)) {
-      //   console.log("result concat array");
       apiData[SEARCH_ID].results = apiData[SEARCH_ID].results.concat(
         data[SEARCH_ID]
       );
@@ -972,65 +886,12 @@ io.on("connection", (socket) => {
       );
     }
   });
-
+  //13-01-24
   socket.on("finalResponse", (data) => {
-    let length = apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results.length;
-
-    console.log("=========FINAL RESPONE=====================>");
-    console.log(
-      "result length=================>",
-      apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results.length
-    );
-    console.log(
-      "result starting object 1  ",
-      JSON.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[0])
-    );
-
-    console.log(
-      "result starting object 2  ",
-      JSON.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[1])
-    );
-
-    console.log(
-      "result starting object last  ",
-      JSON.stringify(
-        apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[length - 1]
-      )
-    );
-
     console.log("global api data ", apiData);
-
     insertDB();
   });
 
-  //   const stream = ss.createStream();
-  //   ss(socket).on("lambdaResponse", (incomingStream) => {
-  //     incomingStream.pipe(stream);
-  // 	incomingStream.on('end', ()=>{
-  // 		console.log("data: 940", data)
-  // 	})
-  // 	// let insertRecords = await insertDB(socket, data);
-  //   });
-
-  //stream code start
-  // ss(socket).on("lambdaResponse", (stream) => {
-  // 	// Create a writable stream on the client side to receive the JSON data
-  //     const jsonStream = JSONStream.parse();
-  //     // ss(socket).on('data', (stream, data) => {
-  //       stream.pipe(jsonStream);
-  //     // });
-
-  //     // Handle the parsed JSON data when it arrives
-  //     jsonStream.on('data', (jsonObject) => {
-  //       console.log('Received JSON Object:', jsonObject);
-  //     });
-  // 	// pipeline(stream, process.stdout,  (err) => err && console.log(err))
-  // });
-  //   stream.on('data', (data)=>{
-  // 	console.log("data: 947 ", data);
-  //   })
-
-  //stream code end
 });
 
 const PORT = process.env.PORT || 3005;
