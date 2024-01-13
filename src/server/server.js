@@ -974,17 +974,17 @@ io.on("connection", (socket) => {
     );
     console.log(
       "result starting object 1  ",
-      JSNO.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[0])
+      JSON.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[0])
     );
 
     console.log(
       "result starting object 2  ",
-      JSNO.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[1])
+      JSON.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[1])
     );
 
     console.log(
       "result starting object 2  ",
-      JSNO.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[2])
+      JSON.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[2])
     );
   });
 
