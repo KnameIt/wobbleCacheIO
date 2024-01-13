@@ -950,7 +950,7 @@ io.on("connection", (socket) => {
     console.log("come to the lamda response ====================>", data);
     const SEARCH_ID = Object.keys(data)[0];
 
-	console.log("this is search id ")
+    console.log("this is search id ", SEARCH_ID);
     if (apiData.hasOwnProperty(SEARCH_ID)) {
       apiData[SEARCH_ID].result.concat(data[SEARCH_ID]);
       apiData[SEARCH_ID].supplied =
@@ -960,6 +960,8 @@ io.on("connection", (socket) => {
       apiData[SEARCH_ID] = data["dataPayload"];
       apiData[SEARCH_ID].result = [];
     }
+
+    console.log("global api object ", apiData);
   });
 
   //   const stream = ss.createStream();
@@ -990,8 +992,6 @@ io.on("connection", (socket) => {
   //   })
 
   //stream code end
-
-  
 });
 
 const PORT = process.env.PORT || 3005;
