@@ -952,13 +952,14 @@ io.on("connection", (socket) => {
 
     console.log("this is search id ", SEARCH_ID);
     if (apiData.hasOwnProperty(SEARCH_ID)) {
-      apiData[SEARCH_ID].result.concat(data[SEARCH_ID]);
+      apiData[SEARCH_ID].results.concat(data[SEARCH_ID]);
       apiData[SEARCH_ID].supplied =
         apiData[SEARCH_ID].supplied + data[SEARCH_ID].supplied;
     } else {
       apiData[SEARCH_ID] = {};
       apiData[SEARCH_ID] = data["dataPayload"];
-      apiData[SEARCH_ID].result = [];
+      apiData[SEARCH_ID].results = [];
+      apiData[SEARCH_ID].results.concat(data[SEARCH_ID]);
     }
 
     console.log("global api object ", apiData);
