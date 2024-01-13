@@ -947,18 +947,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lamdaResponse", async (data) => {
-    console.log("come to the lamda response ====================>", data);
+    // console.log("come to the lamda response ====================>", data);
     const SEARCH_ID = Object.keys(data)[0];
 
-    console.log("this is search id ", SEARCH_ID);
+    // console.log("this is search id ", SEARCH_ID);
 
     if (apiData.hasOwnProperty(SEARCH_ID)) {
-      console.log("result concat array");
+      //   console.log("result concat array");
       apiData[SEARCH_ID].results = apiData[SEARCH_ID].results.concat(
         data[SEARCH_ID]
       );
       apiData[SEARCH_ID].supplied =
-        apiData[SEARCH_ID].supplied + data[SEARCH_ID].supplied;
+        apiData[SEARCH_ID].supplied + (data[SEARCH_ID].supplied != undefined)
+          ? data[SEARCH_ID].supplied
+          : 0;
     } else {
       apiData[SEARCH_ID] = {};
       apiData[SEARCH_ID] = data["dataPayload"];
@@ -967,7 +969,12 @@ io.on("connection", (socket) => {
         data[SEARCH_ID]
       );
     }
+  });
 
+  socket.on("finalResponse", (data) => {
+    let length = apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results.length;
+
+    console.log("=========FINAL RESPONE=====================>");
     console.log(
       "result length=================>",
       apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results.length
@@ -983,8 +990,10 @@ io.on("connection", (socket) => {
     );
 
     console.log(
-      "result starting object 2  ",
-      JSON.stringify(apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[2])
+      "result starting object last  ",
+      JSON.stringify(
+        apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[length - 1]
+      )
     );
   });
 
