@@ -23,7 +23,6 @@ const { defaultProvider } = require("@aws-sdk/credential-provider-node");
 const { Client, Connection } = require("@opensearch-project/opensearch");
 const { AwsSigv4Signer } = require("@opensearch-project/opensearch/aws");
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
-var ss = require("socket.io-stream");
 const lambda = new LambdaClient({ region: "us-east-1" });
 
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
