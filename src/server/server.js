@@ -25,8 +25,8 @@ const lambda = new LambdaClient({ region: "us-east-1" });
 
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
 let serverStorage = {};
-
 let apiData = {};
+let clientSocketIds = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -390,9 +390,10 @@ async function searchGlobalCache(whatWeNeed, event) {
         event
       );
 
-
-      const responseLength = response.length;
-
+      //1-10-24 testing
+      // const responseLength = response.length;
+      //1-10-24 testing
+      const responseLength = 0;
       // More than enough was found, we can push to globalCacheAssets
       if (responseLength > endpoint.needed) {
         // let cacheItems;
@@ -405,19 +406,21 @@ async function searchGlobalCache(whatWeNeed, event) {
       }
       // Not enough were found, we need to file missingAsset request
       else if (responseLength < endpoint.needed) {
-        var cacheItems = response;
-        cacheItems.forEach(function (item) {
-          item.searchId = endpoint.searchId;
-          item.ingredientType = endpoint.ingredientType;
-          item.ingredientId = endpoint.ingredientId;
-          item.ingredientName = endpoint.ingredientName;
-          item.needed = endpoint.needed;
-          item.supplied = responseLength;
-          item.vendorEndpointId = endpoint.vendorEndpointId;
-          item.userId = endpoint.userId;
-          item.cachingChoices = endpoint.cachingChoices[0];
-          globalCacheAssets.push(item);
-        });
+        //1-10-24 testing
+        // var cacheItems = response;
+        // cacheItems.forEach(function (item) {
+        //   item.searchId = endpoint.searchId;
+        //   item.ingredientType = endpoint.ingredientType;
+        //   item.ingredientId = endpoint.ingredientId;
+        //   item.ingredientName = endpoint.ingredientName;
+        //   item.needed = endpoint.needed;
+        //   item.supplied = responseLength;
+        //   item.vendorEndpointId = endpoint.vendorEndpointId;
+        //   item.userId = endpoint.userId;
+        //   item.cachingChoices = endpoint.cachingChoices[0];
+        //   globalCacheAssets.push(item);
+        // });
+        //1-10-24 testing
 
         endpoint.needed = endpoint.needed - responseLength;
         console.log("not enough: ", endpoint);
@@ -477,7 +480,7 @@ async function getOAuthToken(missingAssetOrder) {
     return missingAssetOrder.oAuthToken;
   }
 }
-//13-01-24 update
+//1-10-24 added socket in params
 async function apiSearch(missingAssets, socket) {
   //   const promises = [];
 
@@ -494,7 +497,7 @@ async function apiSearch(missingAssets, socket) {
       missingAssetOrder.token = token;
     }
     if (functionARN) {
-      console.log("functionARN: ", functionARN);
+      console.log("functionARN: 498 ", functionARN);
       //console.log('missingAssetOrder: ', missingAssetOrder);
       const payload = JSON.stringify(missingAssetOrder);
       const command = new InvokeCommand({
@@ -668,15 +671,100 @@ async function clientSocketLamda(clientParams) {
     });
   console.info("End of clientSocketLamda Method");
 }
-//13-01-24
+
+//e-11-01-2024
 async function insertDB(socket, lambdaResponse) {
-  console.log("payload ready to insert in mongoDB...");
+  console.log("Come inside the inserDB=========================>");
   return;
+  let apiCacheResults = lambdaResponse.results;
+  //s-11-01-2024
+  console.log(
+    "lambdaResonse: 673 ",
+    JSON.stringify(apiCacheResults.results[0])
+  );
+  //e-11-01-2024
+  console.log("event: 674 ", lambdaResponse.event);
+  let wobbleCache = serverStorage[lambdaResponse.event.searchId].wobbleCache;
+  let wobbleCacheMode =
+    serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
+  let suppliedWobbleCacheKey =
+    serverStorage[lambdaResponse.event.searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets =
+    serverStorage[lambdaResponse.event.searchId].globalCacheAssets;
+  //e-11-01-2024
+
+  let apiSearchResults = [];
+  if (apiCacheResults != undefined) {
+    //s-11-01-2024
+    apiCacheResults.results.forEach((apiResult) => {
+      //e-11-01-2024
+
+      //s-11-01-2024
+      // apiResult.forEach((singleResult) => {
+      //e-11-01-2024
+      const globalCacheItem = {};
+      //s-11-01-2024
+      globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
+      globalCacheItem.src = apiResult.urls;
+      globalCacheItem.keywords = apiResult.tags;
+      globalCacheItem.content = apiResult;
+      //e-11-01-2024
+      globalCacheItem.userId = lambdaResponse.event.userId;
+      globalCacheItem.searchId = lambdaResponse.event.searchId;
+      //s-11-01-2024
+      globalCacheItem.ingredientId = apiCacheResults.ingredientId;
+      globalCacheItem.ingredientName = apiCacheResults.ingredientName;
+      globalCacheItem.ingredientType = apiCacheResults.ingredientType;
+      globalCacheItem.assetVendorId = apiCacheResults.assetVendorId;
+      globalCacheItem.vendorEndpointId = apiCacheResults.vendorEndpointId;
+      //e-11-01-2024
+      // if it's a source image, we need to get the first url
+      //s-11-01-2024
+      if (apiCacheResults.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+        globalCacheItem.src = apiResult.urls.regular;
+      } else if (
+        apiCacheResults.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+      ) {
+        console.log("apiResult", apiResult.previews.live_site);
+        globalCacheItem.src = apiResult?.previews?.live_site?.url;
+      }
+      console.log("globalCacheItem", globalCacheItem);
+      apiSearchResults.push(globalCacheItem);
+      // });
+
+      //e-11-01-2024
+      // socket.emit('searchResults', apiResult);
+    });
+  }
+  wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
+  socket.emit("searchResults", wobbleCache);
+  const wobbleCacheKey = await sendToMongoWobbleCache(
+    wobbleCache,
+    wobbleCacheMode,
+    suppliedWobbleCacheKey
+  );
+  socket.emit("wobbleCacheKey", wobbleCacheKey);
+  console.log("sending to Global Cache");
+
+  Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
+    (error) => {
+      console.error("Error sending data to OpenSearch Global Cache:", error);
+    }
+  );
+  // socket.emit('wobbleCacheKey', wobbleCacheKey);
+  console.log("wobbleCacheKey:1 ", wobbleCacheKey);
+  return wobbleCacheKey.insertedId;
 }
 
 io.on("connection", (socket) => {
   console.log("A user connected");
   socket.on("disconnect", () => {
+    const searchId = clientSocketIds[socket.id];
+    if(searchId != undefined || searchId != null){
+      if(serverStorage[searchId] != undefined){
+        insertDB()
+      }
+    }
     console.log("User disconnected");
   });
 
@@ -792,7 +880,6 @@ io.on("connection", (socket) => {
       // we don't have enough in Global Cache
       else {
         wobbleCache.items = globalCacheAssets;
-        //13-01-24
         missingAssets.map((obj) => {
           serverStorage[obj.searchId] = {
             wobbleCache,
@@ -865,28 +952,28 @@ io.on("connection", (socket) => {
     }
   });
 
-  //13-01-24
   socket.on("lambdaResponse", async (data) => {
-    const SEARCH_ID = Object.keys(data)[0];
+    const searchId = Object.keys(data)[0];
+    clientSocketIds[socket.id] = searchId;
 
-    if (apiData.hasOwnProperty(SEARCH_ID)) {
-      apiData[SEARCH_ID].results = apiData[SEARCH_ID].results.concat(
-        data[SEARCH_ID]
+    if (apiData.hasOwnProperty(searchId)) {
+      apiData[searchId].results = apiData[searchId].results.concat(
+        data[searchId]
       );
-      apiData[SEARCH_ID].supplied =
-        apiData[SEARCH_ID].supplied + (data[SEARCH_ID].supplied != undefined)
-          ? data[SEARCH_ID].supplied
+      apiData[searchId].supplied =
+        apiData[searchId].supplied + (data[searchId].supplied != undefined)
+          ? data[searchId].supplied
           : 0;
     } else {
-      apiData[SEARCH_ID] = {};
-      apiData[SEARCH_ID] = data["dataPayload"];
-      apiData[SEARCH_ID].results = [];
-      apiData[SEARCH_ID].results = apiData[SEARCH_ID].results.concat(
-        data[SEARCH_ID]
+      apiData[searchId] = {};
+      apiData[searchId] = data["dataPayload"];
+      apiData[searchId].results = [];
+      apiData[searchId].results = apiData[searchId].results.concat(
+        data[searchId]
       );
     }
   });
-  //13-01-24
+
   socket.on("finalResponse", (data) => {
     console.log("global api data ", apiData);
     insertDB();
