@@ -973,6 +973,8 @@ io.on("connection", (socket) => {
     }
   });
 
+  length;
+
   socket.on("finalResponse", (data) => {
     let length = apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results.length;
 
@@ -997,6 +999,8 @@ io.on("connection", (socket) => {
         apiData["2dfb773f-a774-45fd-a80c-81d00120c2d4"].results[length - 1]
       )
     );
+
+    console.log("global api data ", apiData);
 
     insertDB();
   });
