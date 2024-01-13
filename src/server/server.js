@@ -1,6 +1,6 @@
 const http = require("http");
 // const { pipeline } = require('stream');
-const JSONStream = require('JSONStream');
+const JSONStream = require("JSONStream");
 const socketIO = require("socket.io", {
   maxHttpBufferSize: 1e8,
   pingTimeout: 60000,
@@ -23,11 +23,13 @@ const { defaultProvider } = require("@aws-sdk/credential-provider-node");
 const { Client, Connection } = require("@opensearch-project/opensearch");
 const { AwsSigv4Signer } = require("@opensearch-project/opensearch/aws");
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
-var ss = require('socket.io-stream');
+var ss = require("socket.io-stream");
 const lambda = new LambdaClient({ region: "us-east-1" });
 
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
-let serverStorage = {}; 
+let serverStorage = {};
+
+let apiData = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -203,6 +205,7 @@ async function searchOpenSearchGlobalCache(endpoint, lockLists, event) {
 }
 
 const fetch = require("node-fetch");
+const { object } = require("webidl-conversions");
 
 const GRAPHQL_ENDPOINT = process.env.API_KNAMEITSTORE_GRAPHQLAPIENDPOINTOUTPUT;
 const GRAPHQL_API_KEY = process.env.API_KNAMEITSTORE_GRAPHQLAPIKEYOUTPUT;
@@ -482,7 +485,7 @@ async function getOAuthToken(missingAssetOrder) {
 }
 //1-10-24 added socket in params
 async function apiSearch(missingAssets, socket) {
-//   const promises = [];
+  //   const promises = [];
 
   // console.log("missingAssets: 485 ", missingAssets);
 
@@ -497,7 +500,7 @@ async function apiSearch(missingAssets, socket) {
       missingAssetOrder.token = token;
     }
     if (functionARN) {
-      console.log('functionARN: 498 ', functionARN);
+      console.log("functionARN: 498 ", functionARN);
       //console.log('missingAssetOrder: ', missingAssetOrder);
       const payload = JSON.stringify(missingAssetOrder);
       const command = new InvokeCommand({
@@ -506,31 +509,31 @@ async function apiSearch(missingAssets, socket) {
         Payload: payload,
       });
 
-    //   promises.push(
-        lambda
-          .send(command)
-          .then(async (data) => {
-            const responseBuffer = Buffer.from(data.Payload);
-            // console.log('responseBuffer: ', responseBuffer);
-             //s-11-01-2024
-            let resultData = await JSON.parse(responseBuffer.toString("utf8"));
-             //e-11-01-2024
-            // console.log("functionARN event response data ", resultData);
-            // let insertRecords = await insertDB(socket, resultData);
-            // console.log("insertRecords: ", insertRecords);
-            socket.emit("searchResults", resultData);
-            return resultData;
-          })
-          .catch((err) => {
-            console.error(err);
-          })
-    //   );
+      //   promises.push(
+      lambda
+        .send(command)
+        .then(async (data) => {
+          const responseBuffer = Buffer.from(data.Payload);
+          // console.log('responseBuffer: ', responseBuffer);
+          //s-11-01-2024
+          let resultData = await JSON.parse(responseBuffer.toString("utf8"));
+          //e-11-01-2024
+          // console.log("functionARN event response data ", resultData);
+          // let insertRecords = await insertDB(socket, resultData);
+          // console.log("insertRecords: ", insertRecords);
+          socket.emit("searchResults", resultData);
+          return resultData;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      //   );
     } else {
       console.log("No functionARN");
     }
   }
 
-//   const results = await Promise.all(promises);
+  //   const results = await Promise.all(promises);
   console.log("lambda function call: 532 ");
   return "lambda function call";
 }
@@ -672,57 +675,65 @@ async function clientSocketLamda(clientParams) {
   console.info("End of clientSocketLamda Method");
 }
 
- //e-11-01-2024
+//e-11-01-2024
 async function insertDB(socket, lambdaResponse) {
   let apiCacheResults = lambdaResponse.results;
-   //s-11-01-2024
-  console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults.results[0]));
-   //e-11-01-2024
+  //s-11-01-2024
+  console.log(
+    "lambdaResonse: 673 ",
+    JSON.stringify(apiCacheResults.results[0])
+  );
+  //e-11-01-2024
   console.log("event: 674 ", lambdaResponse.event);
   let wobbleCache = serverStorage[lambdaResponse.event.searchId].wobbleCache;
-  let wobbleCacheMode = serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
-  let suppliedWobbleCacheKey = serverStorage[lambdaResponse.event.searchId].suppliedWobbleCacheKey;
-  let globalCacheAssets = serverStorage[lambdaResponse.event.searchId].globalCacheAssets;
-   //e-11-01-2024
+  let wobbleCacheMode =
+    serverStorage[lambdaResponse.event.searchId].wobbleCacheMode;
+  let suppliedWobbleCacheKey =
+    serverStorage[lambdaResponse.event.searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets =
+    serverStorage[lambdaResponse.event.searchId].globalCacheAssets;
+  //e-11-01-2024
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
-     //s-11-01-2024
+    //s-11-01-2024
     apiCacheResults.results.forEach((apiResult) => {
-    //e-11-01-2024
+      //e-11-01-2024
 
       //s-11-01-2024
       // apiResult.forEach((singleResult) => {
-      //e-11-01-2024  
+      //e-11-01-2024
       const globalCacheItem = {};
       //s-11-01-2024
-        globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
-        globalCacheItem.src = apiResult.urls;
-        globalCacheItem.keywords = apiResult.tags;
-        globalCacheItem.content = apiResult;
-        //e-11-01-2024
-        globalCacheItem.userId = lambdaResponse.event.userId;
-        globalCacheItem.searchId = lambdaResponse.event.searchId;
-        //s-11-01-2024
-        globalCacheItem.ingredientId = apiCacheResults.ingredientId;
-        globalCacheItem.ingredientName = apiCacheResults.ingredientName;
-        globalCacheItem.ingredientType = apiCacheResults.ingredientType;
-        globalCacheItem.assetVendorId = apiCacheResults.assetVendorId;
-        globalCacheItem.vendorEndpointId = apiCacheResults.vendorEndpointId;
-        //e-11-01-2024
-        // if it's a source image, we need to get the first url
-  //s-11-01-2024
-        if (apiCacheResults.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-          globalCacheItem.src = apiResult.urls.regular;
-        } else if (apiCacheResults.vendorEndpointId === "clcecey82qevd0ake6o2v1id2") {
-          console.log("apiResult", apiResult.previews.live_site);
-          globalCacheItem.src = apiResult?.previews?.live_site?.url;
-        }
-        console.log("globalCacheItem", globalCacheItem);
-        apiSearchResults.push(globalCacheItem); 
+      globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
+      globalCacheItem.src = apiResult.urls;
+      globalCacheItem.keywords = apiResult.tags;
+      globalCacheItem.content = apiResult;
+      //e-11-01-2024
+      globalCacheItem.userId = lambdaResponse.event.userId;
+      globalCacheItem.searchId = lambdaResponse.event.searchId;
+      //s-11-01-2024
+      globalCacheItem.ingredientId = apiCacheResults.ingredientId;
+      globalCacheItem.ingredientName = apiCacheResults.ingredientName;
+      globalCacheItem.ingredientType = apiCacheResults.ingredientType;
+      globalCacheItem.assetVendorId = apiCacheResults.assetVendorId;
+      globalCacheItem.vendorEndpointId = apiCacheResults.vendorEndpointId;
+      //e-11-01-2024
+      // if it's a source image, we need to get the first url
+      //s-11-01-2024
+      if (apiCacheResults.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+        globalCacheItem.src = apiResult.urls.regular;
+      } else if (
+        apiCacheResults.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+      ) {
+        console.log("apiResult", apiResult.previews.live_site);
+        globalCacheItem.src = apiResult?.previews?.live_site?.url;
+      }
+      console.log("globalCacheItem", globalCacheItem);
+      apiSearchResults.push(globalCacheItem);
       // });
 
-       //e-11-01-2024
+      //e-11-01-2024
       // socket.emit('searchResults', apiResult);
     });
   }
@@ -876,7 +887,7 @@ io.on("connection", (socket) => {
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
         let apiCacheResults = await apiSearch(missingAssets, socket);
         // console.log("missingAssets 804: ", JSON.stringify(serverStorage));
-        return {status: 200, message: "success" };
+        return { status: 200, message: "success" };
         //11-01-24 testing
         // let apiSearchResults = [];
         // apiCacheResults.forEach((apiResult) => {
@@ -935,30 +946,49 @@ io.on("connection", (socket) => {
       console.log("saved to GlobalCache");
     }
   });
-//   const stream = ss.createStream();
-//   ss(socket).on("lambdaResponse", (incomingStream) => {
-//     incomingStream.pipe(stream);
-// 	incomingStream.on('end', ()=>{
-// 		console.log("data: 940", data)
-// 	})
-// 	// let insertRecords = await insertDB(socket, data);
-//   });
-ss(socket).on("lambdaResponse", (stream) => {
-	// Create a writable stream on the client side to receive the JSON data
-    const jsonStream = JSONStream.parse();
-    // ss(socket).on('data', (stream, data) => {
-      stream.pipe(jsonStream);
-    // });
 
-    // Handle the parsed JSON data when it arrives
-    jsonStream.on('data', (jsonObject) => {
-      console.log('Received JSON Object:', jsonObject);
-    });
-	// pipeline(stream, process.stdout,  (err) => err && console.log(err))
-});
-//   stream.on('data', (data)=>{
-// 	console.log("data: 947 ", data);
-//   })
+  socket.on("lamdaResponse", async (data) => {
+	console.log("come to the lamda response ====================>",data)
+    const SEARCH_ID = Object.keys(data)[0];
+    if (apiData.hasOwnProperty(SEARCH_ID)) {
+      apiData[SEARCH_ID].result.concat(data[SEARCH_ID]);
+      apiData[SEARCH_ID].supplied =
+        apiData[SEARCH_ID].supplied + data[SEARCH_ID].supplied;
+    } else {
+      apiData[SEARCH_ID] = {};
+      apiData[SEARCH_ID] = data["dataPayload"];
+      apiData[SEARCH_ID].result = [];
+    }
+  });
+
+  //   const stream = ss.createStream();
+  //   ss(socket).on("lambdaResponse", (incomingStream) => {
+  //     incomingStream.pipe(stream);
+  // 	incomingStream.on('end', ()=>{
+  // 		console.log("data: 940", data)
+  // 	})
+  // 	// let insertRecords = await insertDB(socket, data);
+  //   });
+
+  //stream code start
+  // ss(socket).on("lambdaResponse", (stream) => {
+  // 	// Create a writable stream on the client side to receive the JSON data
+  //     const jsonStream = JSONStream.parse();
+  //     // ss(socket).on('data', (stream, data) => {
+  //       stream.pipe(jsonStream);
+  //     // });
+
+  //     // Handle the parsed JSON data when it arrives
+  //     jsonStream.on('data', (jsonObject) => {
+  //       console.log('Received JSON Object:', jsonObject);
+  //     });
+  // 	// pipeline(stream, process.stdout,  (err) => err && console.log(err))
+  // });
+  //   stream.on('data', (data)=>{
+  // 	console.log("data: 947 ", data);
+  //   })
+
+  //stream code end
 });
 
 const PORT = process.env.PORT || 3005;
