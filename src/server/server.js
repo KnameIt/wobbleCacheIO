@@ -947,8 +947,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lamdaResponse", async (data) => {
-	console.log("come to the lamda response ====================>",data)
+    console.log("come to the lamda response ====================>", data);
     const SEARCH_ID = Object.keys(data)[0];
+
+	console.log("this is search id ")
     if (apiData.hasOwnProperty(SEARCH_ID)) {
       apiData[SEARCH_ID].result.concat(data[SEARCH_ID]);
       apiData[SEARCH_ID].supplied =
@@ -989,20 +991,7 @@ io.on("connection", (socket) => {
 
   //stream code end
 
- socket.on("lamdaResponse", async (data) => {
-    console.log("come to the lamda response ====================>", data);
-    const SEARCH_ID = Object.keys(data)[0];
-    if (apiData.hasOwnProperty(SEARCH_ID)) {
-      apiData[SEARCH_ID].result.concat(data[SEARCH_ID]);
-      apiData[SEARCH_ID].supplied =
-        apiData[SEARCH_ID].supplied + data[SEARCH_ID].supplied;
-    } else {
-      apiData[SEARCH_ID] = {};
-      apiData[SEARCH_ID] = data["dataPayload"];
-      apiData[SEARCH_ID].result = [];
-    }
-  });
-
+  
 });
 
 const PORT = process.env.PORT || 3005;
