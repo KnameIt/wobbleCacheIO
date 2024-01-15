@@ -757,7 +757,12 @@ async function clientSocketLamda(clientParams) {
 
 //updated insertDB function
 async function insertDB(socket, searchId) {
-  console.log("Come inside the inserDB=========================>");
+
+  console.log("this is api data ",apiData)
+  console.log(
+    "Come inside the inserDB=========================>",
+    apiData[searchId]
+  );
   let apiCacheResults = apiData[searchId].results;
   //s-11-01-2024
   console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults[0]));
@@ -831,7 +836,7 @@ async function insertDB(socket, searchId) {
         console.log("apiResult", apiResult.previews.live_site);
         globalCacheItem.src = apiResult?.previews?.live_site?.url;
       }
-      console.log("globalCacheItem", globalCacheItem);
+      // console.log("globalCacheItem", globalCacheItem);
       apiSearchResults.push(globalCacheItem);
       // });
 
@@ -866,12 +871,12 @@ async function insertDB(socket, searchId) {
 io.on("connection", (socket) => {
   console.log("A user connected");
   socket.on("disconnect", () => {
-    const searchId = clientSocketIds[socket.id];
-    if (searchId != undefined || searchId != null) {
-      if (serverStorage[searchId] != undefined) {
-        insertDB();
-      }
-    }
+    // const searchId = clientSocketIds[socket.id];
+    // if (searchId != undefined || searchId != null) {
+    //   if (serverStorage[searchId] != undefined) {
+    //     insertDB();
+    //   }
+    // }
     console.log("User disconnected");
   });
 
