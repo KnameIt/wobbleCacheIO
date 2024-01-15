@@ -1058,7 +1058,7 @@ io.on("connection", (socket) => {
 
   socket.on("finalResponse", (data) => {
     console.log("final response data", data);
-    console.log("global api data ", apiData);
+    console.log("global api search id data one ",  apiData[data?.searchId]);
     insertDB(socket, apiData[data?.searchId]);
   });
 });
