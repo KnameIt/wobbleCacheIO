@@ -825,7 +825,10 @@ async function insertDB(socket, searchId) {
   // console.log("this is wobble cache code ", wobbleCache);
 
   console.log("before api data key exist ", apiData.hasOwnProperty(searchId));
-  
+  console.log(
+    "before serverStorage data key exist ",
+    serverStorage.hasOwnProperty(searchId)
+  );
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -840,8 +843,10 @@ async function insertDB(socket, searchId) {
   }
 
   console.log("after api data key exist ", apiData.hasOwnProperty(searchId));
-
-
+  console.log(
+    "after serverStorage data key exist ",
+    serverStorage.hasOwnProperty(searchId)
+  );
   socket.emit("wobbleCacheKey", wobbleCacheKey);
   console.log("sending to Global Cache");
 
