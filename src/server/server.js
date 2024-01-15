@@ -863,8 +863,18 @@ async function insertDB(socket, searchId) {
 io.on("connection", (socket) => {
   console.log("A user connected");
   socket.on("disconnect", () => {
-    // const searchId = clientSocketIds[socket.id];
+    const searchId = clientSocketIds[socket.id];
+
+    console.log(
+      "all socket ids with search id ",
+      JSON.stringify(clientSocketIds)
+    );
+    console.log(
+      "disconnected socket id with search id ",
+      clientSocketIds[socket.id]
+    );
     // if (searchId != undefined || searchId != null) {
+    //   // if (!searchId.includes[(null, undefined)]) {
     //   if (serverStorage[searchId] != undefined) {
     //     insertDB();
     //   }
