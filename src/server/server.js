@@ -500,6 +500,7 @@ async function apiSearch(missingAssets, socket) {
       console.log("functionARN: 498 ", functionARN);
       //console.log('missingAssetOrder: ', missingAssetOrder);
       const payload = JSON.stringify(missingAssetOrder);
+
       const command = new InvokeCommand({
         FunctionName: functionARN,
         InvocationType: "RequestResponse",
@@ -615,7 +616,8 @@ async function processWobbleCacheRequest(event) {
 async function sendToMongoWobbleCache(
   wobbleCache,
   wobbleCacheMode,
-  suppliedWobbleCacheKey
+  suppliedWobbleCacheKey,
+  searchId = null
 ) {
   // // // connnecte to mongodb and upload the results to the wobbleCache directory
   let uri =
@@ -765,7 +767,7 @@ async function insertDB(socket, searchId) {
   // );
   let apiCacheResults = apiData[searchId].results;
   //s-11-01-2024
-  console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults[0]));
+  // console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults[0]));
 
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
@@ -822,12 +824,24 @@ async function insertDB(socket, searchId) {
 
   // console.log("this is wobble cache code ", wobbleCache);
 
+  console.log("before api data key exist ", apiData.hasOwnProperty(searchId));
+  
+
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
     wobbleCache,
     wobbleCacheMode,
     suppliedWobbleCacheKey
   );
+
+  if (wobbleCacheKey?.acknowledged) {
+    delete apiData[searchId];
+    delete serverStorage[searchId];
+  }
+
+  console.log("after api data key exist ", apiData.hasOwnProperty(searchId));
+
+
   socket.emit("wobbleCacheKey", wobbleCacheKey);
   console.log("sending to Global Cache");
 
