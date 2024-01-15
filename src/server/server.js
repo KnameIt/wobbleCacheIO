@@ -760,10 +760,7 @@ async function insertDB(socket, lambdaResponse) {
   console.log("Come inside the inserDB=========================>");
   let apiCacheResults = lambdaResponse.results;
   //s-11-01-2024
-  console.log(
-    "lambdaResonse: 673 ",
-    JSON.stringify(apiCacheResults[0])
-  );
+  console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults[0]));
   //e-11-01-2024
   console.log("event: 674 ", lambdaResponse);
   let wobbleCache = serverStorage[lambdaResponse.searchId].wobbleCache;
@@ -1060,8 +1057,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("finalResponse", (data) => {
+    console.log("final response data", data);
     console.log("global api data ", apiData);
-    insertDB(socket, apiData);
+    insertDB(socket, apiData[data?.searchId]);
   });
 });
 
