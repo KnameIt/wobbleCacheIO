@@ -757,11 +757,12 @@ async function clientSocketLamda(clientParams) {
 
 //updated insertDB function
 async function insertDB(socket, searchId) {
-  console.log("this is api data ", apiData);
-  console.log(
-    "Come inside the insertDB=========================>",
-    apiData[searchId]
-  );
+  console.log("this is search id inside the insertDB", searchId);
+  // console.log("this is api data ", apiData);
+  // console.log(
+  //   "Come inside the insertDB=========================>",
+  //   apiData[searchId]
+  // );
   let apiCacheResults = apiData[searchId].results;
   //s-11-01-2024
   console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults[0]));
