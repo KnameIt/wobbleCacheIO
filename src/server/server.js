@@ -191,8 +191,10 @@ async function searchOpenSearchGlobalCache(endpoint, lockLists, event) {
         },
       },
     });
-    console.log("Search response:", response.body.hits.hits.length);
-    let searchResults = response.body.hits.hits;
+    console.log('clientOpensearch', clientOpensearch);
+    console.log('response: ', response);
+    console.log("Search response:", response.body?.hits?.hits?.length);
+    let searchResults = response.body?.hits?.hits;
     const searchResultsSource = extractSourceContent(searchResults);
     // socket.emit('searchResults', searchResultsSource);
     return searchResultsSource;
