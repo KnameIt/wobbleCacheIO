@@ -762,7 +762,7 @@ async function insertDB(socket, lambdaResponse) {
   //s-11-01-2024
   console.log(
     "lambdaResonse: 673 ",
-    JSON.stringify(apiCacheResults.results[0])
+    JSON.stringify(apiCacheResults[0])
   );
   //e-11-01-2024
   console.log("event: 674 ", lambdaResponse);
