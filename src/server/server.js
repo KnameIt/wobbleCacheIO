@@ -820,7 +820,7 @@ async function insertDB(socket, searchId) {
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
   socket.emit("searchResults", wobbleCache);
 
-  console.log("this is wobble cache code ", wobbleCache);
+  // console.log("this is wobble cache code ", wobbleCache);
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
