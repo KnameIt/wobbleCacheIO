@@ -966,6 +966,7 @@ io.on("connection", (socket) => {
       else {
         wobbleCache.items = globalCacheAssets;
         missingAssets.map((obj) => {
+          console.log("search id for the serverSotage ", obj.searchId);
           serverStorage[obj.searchId] = {
             wobbleCache,
             wobbleCacheMode,
@@ -1060,8 +1061,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("finalResponse", (data) => {
-    console.log("final response data", data);
-    console.log("global api search id data one ", apiData[data?.searchId]);
+    console.log("final response searchid ", data?.searchId);
+    // console.log("final response data", data);
+    // console.log("global api search id data one ", apiData[data?.searchId]);
     insertDB(socket, data?.searchId);
   });
 });
