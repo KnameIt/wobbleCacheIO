@@ -756,24 +756,49 @@ async function clientSocketLamda(clientParams) {
 // }
 
 //updated insertDB function
-async function insertDB(socket, lambdaResponse) {
+async function insertDB(socket, searchId) {
   console.log("Come inside the inserDB=========================>");
-  let apiCacheResults = lambdaResponse.results;
+  let apiCacheResults = apiData[searchId].results;
   //s-11-01-2024
   console.log("lambdaResonse: 673 ", JSON.stringify(apiCacheResults[0]));
-  //e-11-01-2024
-  console.log("event: 674 ", lambdaResponse);
-  let wobbleCache = serverStorage[lambdaResponse.searchId].wobbleCache;
-  let wobbleCacheMode = serverStorage[lambdaResponse.searchId].wobbleCacheMode;
-  let suppliedWobbleCacheKey =
-    serverStorage[lambdaResponse.searchId].suppliedWobbleCacheKey;
-  let globalCacheAssets =
-    serverStorage[lambdaResponse.searchId].globalCacheAssets;
+
+  let wobbleCache = serverStorage[searchId].wobbleCache;
+  let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
+  let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
   //e-11-01-2024
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
     //s-11-01-2024
+
+    // apiResult.results.forEach((singleResult) => {
+    //     const globalCacheItem = {};
+    //     globalCacheItem.id =
+    //       apiResult.assetVendorId + "-" + singleResult.id;
+    //     globalCacheItem.src = singleResult.urls;
+    //     globalCacheItem.keywords = singleResult.tags;
+    //     globalCacheItem.content = singleResult;
+    //     globalCacheItem.userId = event.userId;
+    //     globalCacheItem.searchId = event.searchId;
+    //     globalCacheItem.ingredientId = apiResult.ingredientId;
+    //     globalCacheItem.ingredientName = apiResult.ingredientName;
+    //     globalCacheItem.ingredientType = apiResult.ingredientType;
+    //     globalCacheItem.assetVendorId = apiResult.assetVendorId;
+    //     globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
+    //     // if it's a source image, we need to get the first url
+    //     if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+    //       globalCacheItem.src = singleResult.urls.regular;
+    //     } else if (
+    //       apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+    //     ) {
+    //       console.log("singleResult", singleResult.previews.live_site);
+    //       globalCacheItem.src = singleResult?.previews?.live_site?.url;
+    //     }
+    //     console.log("globalCacheItem", globalCacheItem);
+    //     apiSearchResults.push(globalCacheItem);
+    //   });
+
     apiCacheResults.forEach((apiResult) => {
       //e-11-01-2024
 
@@ -782,26 +807,26 @@ async function insertDB(socket, lambdaResponse) {
       //e-11-01-2024
       const globalCacheItem = {};
       //s-11-01-2024
-      globalCacheItem.id = apiCacheResults.assetVendorId + "-" + apiResult.id;
+      globalCacheItem.id = apiData[searchId].assetVendorId + "-" + apiResult.id;
       globalCacheItem.src = apiResult.urls;
       globalCacheItem.keywords = apiResult.tags;
       globalCacheItem.content = apiResult;
       //e-11-01-2024
-      globalCacheItem.userId = lambdaResponse.userId;
-      globalCacheItem.searchId = lambdaResponse.searchId;
+      globalCacheItem.userId = apiData[searchId].userId;
+      globalCacheItem.searchId = apiData[searchId].searchId;
       //s-11-01-2024
-      globalCacheItem.ingredientId = lambdaResponse.ingredientId;
-      globalCacheItem.ingredientName = lambdaResponse.ingredientName;
-      globalCacheItem.ingredientType = lambdaResponse.ingredientType;
-      globalCacheItem.assetVendorId = lambdaResponse.assetVendorId;
-      globalCacheItem.vendorEndpointId = lambdaResponse.vendorEndpointId;
+      globalCacheItem.ingredientId = apiData[searchId].ingredientId;
+      globalCacheItem.ingredientName = apiData[searchId].ingredientName;
+      globalCacheItem.ingredientType = apiData[searchId].ingredientType;
+      globalCacheItem.assetVendorId = apiData[searchId].assetVendorId;
+      globalCacheItem.vendorEndpointId = apiData[searchId].vendorEndpointId;
       //e-11-01-2024
       // if it's a source image, we need to get the first url
       //s-11-01-2024
-      if (lambdaResponse.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+      if (apiData[searchId].vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
         globalCacheItem.src = apiResult.urls.regular;
       } else if (
-        lambdaResponse.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+        apiData[searchId].vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
       ) {
         console.log("apiResult", apiResult.previews.live_site);
         globalCacheItem.src = apiResult?.previews?.live_site?.url;
@@ -1058,8 +1083,8 @@ io.on("connection", (socket) => {
 
   socket.on("finalResponse", (data) => {
     console.log("final response data", data);
-    console.log("global api data ", apiData);
-    insertDB(socket, apiData[data?.searchId]);
+    console.log("global api search id data one ", apiData[data?.searchId]);
+    insertDB(socket, data?.searchId);
   });
 });
 
