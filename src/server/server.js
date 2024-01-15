@@ -757,10 +757,9 @@ async function clientSocketLamda(clientParams) {
 
 //updated insertDB function
 async function insertDB(socket, searchId) {
-
-  console.log("this is api data ",apiData)
+  console.log("this is api data ", apiData);
   console.log(
-    "Come inside the inserDB=========================>",
+    "Come inside the insertDB=========================>",
     apiData[searchId]
   );
   let apiCacheResults = apiData[searchId].results;
@@ -776,33 +775,6 @@ async function insertDB(socket, searchId) {
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
     //s-11-01-2024
-
-    // apiResult.results.forEach((singleResult) => {
-    //     const globalCacheItem = {};
-    //     globalCacheItem.id =
-    //       apiResult.assetVendorId + "-" + singleResult.id;
-    //     globalCacheItem.src = singleResult.urls;
-    //     globalCacheItem.keywords = singleResult.tags;
-    //     globalCacheItem.content = singleResult;
-    //     globalCacheItem.userId = event.userId;
-    //     globalCacheItem.searchId = event.searchId;
-    //     globalCacheItem.ingredientId = apiResult.ingredientId;
-    //     globalCacheItem.ingredientName = apiResult.ingredientName;
-    //     globalCacheItem.ingredientType = apiResult.ingredientType;
-    //     globalCacheItem.assetVendorId = apiResult.assetVendorId;
-    //     globalCacheItem.vendorEndpointId = apiResult.vendorEndpointId;
-    //     // if it's a source image, we need to get the first url
-    //     if (apiResult.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-    //       globalCacheItem.src = singleResult.urls.regular;
-    //     } else if (
-    //       apiResult.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
-    //     ) {
-    //       console.log("singleResult", singleResult.previews.live_site);
-    //       globalCacheItem.src = singleResult?.previews?.live_site?.url;
-    //     }
-    //     console.log("globalCacheItem", globalCacheItem);
-    //     apiSearchResults.push(globalCacheItem);
-    //   });
 
     apiCacheResults.forEach((apiResult) => {
       //e-11-01-2024
@@ -850,19 +822,19 @@ async function insertDB(socket, searchId) {
   console.log("this is wobble cache code ", wobbleCache);
 
   //15/01/2024
-  // const wobbleCacheKey = await sendToMongoWobbleCache(
-  //   wobbleCache,
-  //   wobbleCacheMode,
-  //   suppliedWobbleCacheKey
-  // );
-  // socket.emit("wobbleCacheKey", wobbleCacheKey);
-  // console.log("sending to Global Cache");
+  const wobbleCacheKey = await sendToMongoWobbleCache(
+    wobbleCache,
+    wobbleCacheMode,
+    suppliedWobbleCacheKey
+  );
+  socket.emit("wobbleCacheKey", wobbleCacheKey);
+  console.log("sending to Global Cache");
 
-  // Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
-  //   (error) => {
-  //     console.error("Error sending data to OpenSearch Global Cache:", error);
-  //   }
-  // );
+  Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
+    (error) => {
+      console.error("Error sending data to OpenSearch Global Cache:", error);
+    }
+  );
   // // socket.emit('wobbleCacheKey', wobbleCacheKey);
   // console.log("wobbleCacheKey:1 ", wobbleCacheKey);
   // return wobbleCacheKey.insertedId;
