@@ -671,6 +671,7 @@ async function clientSocketLamda(clientParams) {
 //13-01-24
 async function insertDB(socket, lambdaResponse) {
   console.log("payload ready to insert in mongoDB...");
+  console.log("come to the inserDB")
   return;
 }
 
