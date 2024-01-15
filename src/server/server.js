@@ -390,10 +390,7 @@ async function searchGlobalCache(whatWeNeed, event) {
         event
       );
 
-      //1-10-24 testing
-      // const responseLength = response.length;
-      //1-10-24 testing
-      const responseLength = 0;
+      const responseLength = response.length;
       // More than enough was found, we can push to globalCacheAssets
       if (responseLength > endpoint.needed) {
         // let cacheItems;
@@ -406,21 +403,20 @@ async function searchGlobalCache(whatWeNeed, event) {
       }
       // Not enough were found, we need to file missingAsset request
       else if (responseLength < endpoint.needed) {
-        //1-10-24 testing
-        // var cacheItems = response;
-        // cacheItems.forEach(function (item) {
-        //   item.searchId = endpoint.searchId;
-        //   item.ingredientType = endpoint.ingredientType;
-        //   item.ingredientId = endpoint.ingredientId;
-        //   item.ingredientName = endpoint.ingredientName;
-        //   item.needed = endpoint.needed;
-        //   item.supplied = responseLength;
-        //   item.vendorEndpointId = endpoint.vendorEndpointId;
-        //   item.userId = endpoint.userId;
-        //   item.cachingChoices = endpoint.cachingChoices[0];
-        //   globalCacheAssets.push(item);
-        // });
-        //1-10-24 testing
+        
+        var cacheItems = response;
+        cacheItems.forEach(function (item) {
+          item.searchId = endpoint.searchId;
+          item.ingredientType = endpoint.ingredientType;
+          item.ingredientId = endpoint.ingredientId;
+          item.ingredientName = endpoint.ingredientName;
+          item.needed = endpoint.needed;
+          item.supplied = responseLength;
+          item.vendorEndpointId = endpoint.vendorEndpointId;
+          item.userId = endpoint.userId;
+          item.cachingChoices = endpoint.cachingChoices[0];
+          globalCacheAssets.push(item);
+        });
 
         endpoint.needed = endpoint.needed - responseLength;
         console.log("not enough: ", endpoint);
@@ -676,7 +672,7 @@ async function clientSocketLamda(clientParams) {
 //updated insertDB function
 async function insertDB(socket, searchId) {
   console.log(
-    "Come inside the insertDB=========================>",
+    "Payload ready to insert in mongoDB=========================>",
     apiData[searchId]
   );
   let apiCacheResults = apiData[searchId].results;
@@ -749,15 +745,6 @@ io.on("connection", (socket) => {
   console.log("A user connected");
   socket.on("disconnect", () => {
     const searchId = clientSocketIds[socket.id];
-
-    console.log(
-      "all socket ids with search id ",
-      JSON.stringify(clientSocketIds)
-    );
-    console.log(
-      "disconnected socket id with search id ",
-      clientSocketIds[socket.id]
-    );
     // if (searchId != undefined || searchId != null) {
     //   // if (!searchId.includes[(null, undefined)]) {
     //   if (serverStorage[searchId] != undefined) {
