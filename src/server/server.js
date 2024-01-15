@@ -390,6 +390,8 @@ async function searchGlobalCache(whatWeNeed, event) {
         event
       );
 
+      console.log('response: ', response);
+
       const responseLength = response.length;
       // More than enough was found, we can push to globalCacheAssets
       if (responseLength > endpoint.needed) {
