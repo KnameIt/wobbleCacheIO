@@ -675,10 +675,6 @@ async function clientSocketLamda(clientParams) {
 
 //updated insertDB function
 async function insertDB(socket, searchId) {
-  // console.log(
-  //   "Payload ready to insert in mongoDB=========================>",
-  //   apiData[searchId]
-  // );
   let apiCacheResults = apiData[searchId].results;
   console.log("serverStorage[searchId].clientSocketId : 683 ", serverStorage[searchId].clientSocketId);
   io.to(serverStorage[searchId].clientSocketId).emit('searchResults', apiCacheResults);
@@ -686,11 +682,9 @@ async function insertDB(socket, searchId) {
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
   let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
-  //e-11-01-2024
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
-    //s-11-01-2024
 
     apiCacheResults.forEach((apiResult) => {
       const globalCacheItem = {};
@@ -714,12 +708,10 @@ async function insertDB(socket, searchId) {
         globalCacheItem.src = apiResult?.previews?.live_site?.url;
       }
       apiSearchResults.push(globalCacheItem);
-
-      socket.emit("searchResults", apiResult);
     });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  socket.emit("searchResults", wobbleCache);
+  io.to(serverStorage[searchId].clientSocketId).emit("searchResults", wobbleCache);
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -728,20 +720,19 @@ async function insertDB(socket, searchId) {
     suppliedWobbleCacheKey
   );
 
+  io.to(serverStorage[searchId].clientSocketId).emit("wobbleCacheKey", wobbleCacheKey);
+  console.log("sending to Global Cache");
+  
   if (wobbleCacheKey?.acknowledged) {
     delete apiData[searchId];
     delete serverStorage[searchId];
   }
-
-  socket.emit("wobbleCacheKey", wobbleCacheKey);
-  console.log("sending to Global Cache");
-
   Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
     (error) => {
       console.error("Error sending data to OpenSearch Global Cache:", error);
     }
   );
-  socket.emit("wobbleCacheKey", wobbleCacheKey);
+  // socket.emit("wobbleCacheKey", wobbleCacheKey);
   console.log("wobbleCacheKey:1 ", wobbleCacheKey);
   return wobbleCacheKey.insertedId;
 }
