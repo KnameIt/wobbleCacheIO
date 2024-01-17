@@ -681,7 +681,7 @@ async function insertDB(socket, searchId) {
   // );
   let apiCacheResults = apiData[searchId].results;
   console.log("serverStorage[searchId].clientSocketId : 683 ", serverStorage[searchId].clientSocketId);
-  io.to(serverStorage[data?.searchId].clientSocketId).emit('searchResults', apiCacheResults);
+  io.to(serverStorage[searchId].clientSocketId).emit('searchResults', apiCacheResults);
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
