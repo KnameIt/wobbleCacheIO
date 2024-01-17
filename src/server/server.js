@@ -675,12 +675,12 @@ async function clientSocketLamda(clientParams) {
 
 //updated insertDB function
 async function insertDB(socket, searchId) {
-  console.log(
-    "Payload ready to insert in mongoDB=========================>",
-    apiData[searchId]
-  );
+  // console.log(
+  //   "Payload ready to insert in mongoDB=========================>",
+  //   apiData[searchId]
+  // );
   let apiCacheResults = apiData[searchId].results;
-  console.log("serverStorage[data?.searchId].clientSocketId : 683 ", serverStorage[data?.searchId].clientSocketId);
+  console.log("serverStorage[searchId].clientSocketId : 683 ", serverStorage[searchId].clientSocketId);
   io.to(serverStorage[data?.searchId].clientSocketId).emit('searchResults', apiCacheResults);
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
@@ -968,7 +968,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("finalResponse", (data) => {
-    console.log("final response searchid ", data?.searchId);
+    console.log("final response searchid : ", data?.searchId);
     // console.log("final response data", data);
     // console.log("global api search id data one ", apiData[data?.searchId]);
     console.log("serverStorage[data?.searchId].clientSocketId : ", serverStorage[data?.searchId].clientSocketId);
