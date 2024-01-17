@@ -26,7 +26,7 @@ const lambda = new LambdaClient({ region: "us-east-1" });
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
 let serverStorage = {};
 let apiData = {};
-let clientSocketIds = {};
+let lambdaSocketIds = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -519,7 +519,7 @@ async function apiSearch(missingAssets, socket) {
           // console.log("functionARN event response data ", resultData);
           // let insertRecords = await insertDB(socket, resultData);
           // console.log("insertRecords: ", insertRecords);
-          socket.emit("searchResults", resultData);
+          // socket.emit("searchResults", resultData);
           return resultData;
         })
         .catch((err) => {
@@ -680,7 +680,8 @@ async function insertDB(socket, searchId) {
     apiData[searchId]
   );
   let apiCacheResults = apiData[searchId].results;
-
+  console.log("serverStorage[data?.searchId].clientSocketId : 683 ", serverStorage[data?.searchId].clientSocketId);
+  io.to(serverStorage[data?.searchId].clientSocketId).emit('searchResults', apiCacheResults);
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
@@ -748,7 +749,7 @@ async function insertDB(socket, searchId) {
 io.on("connection", (socket) => {
   console.log("A user connected");
   socket.on("disconnect", () => {
-    const searchId = clientSocketIds[socket.id];
+    const searchId = lambdaSocketIds[socket.id];
     // if (searchId != undefined || searchId != null) {
     //   // if (!searchId.includes[(null, undefined)]) {
     //   if (serverStorage[searchId] != undefined) {
@@ -877,6 +878,7 @@ io.on("connection", (socket) => {
             wobbleCacheMode,
             suppliedWobbleCacheKey,
             globalCacheAssets,
+            clientSocketId: socket.id
           };
         });
         // console.log("missingAssets 798: ", JSON.stringify(serverStorage));
@@ -945,7 +947,7 @@ io.on("connection", (socket) => {
 
   socket.on("lambdaResponse", async (data) => {
     const searchId = Object.keys(data)[0];
-    clientSocketIds[socket.id] = searchId;
+    lambdaSocketIds[socket.id] = searchId;
 
     if (apiData.hasOwnProperty(searchId)) {
       apiData[searchId].results = apiData[searchId].results.concat(
@@ -969,6 +971,8 @@ io.on("connection", (socket) => {
     console.log("final response searchid ", data?.searchId);
     // console.log("final response data", data);
     // console.log("global api search id data one ", apiData[data?.searchId]);
+    console.log("serverStorage[data?.searchId].clientSocketId : ", serverStorage[data?.searchId].clientSocketId);
+    // io.to(serverStorage[data?.searchId].clientSocketId).emit('chat message', data.msg);
     insertDB(socket, data?.searchId);
   });
 });
