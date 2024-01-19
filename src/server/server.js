@@ -748,7 +748,7 @@ async function insertDB(socket, searchId) {
 }
 
 io.on("connection", (socket) => {
-  console.log("A user connected");
+  console.log("A user connected: ", socket.id);
   socket.on("disconnect", () => {
     const searchId = lambdaSocketIds[socket.id];
     // if (searchId != undefined || searchId != null) {
