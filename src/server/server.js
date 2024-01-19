@@ -472,14 +472,14 @@ async function getOAuthToken(missingAssetOrder) {
       });
 
       missingAssetOrder.oAuthToken = integrationProfile.oAuthToken;
-      missingAssetOrder.oAuthTokenExpiration =
-        integrationProfile.oAuthTokenExpiration;
+      // missingAssetOrder.oAuthTokenExpiration =
+      //   integrationProfile.oAuthTokenExpiration;
 
       // console.log("missingAssetOrder: ", missingAssetOrder);
     }
 
     //   console.log("missingAssetOrder token: ", missingAssetOrder.oAuthToken);
-    return missingAssetOrder;
+    return missingAssetOrder.oAuthToken;
   }
 }
 //1-10-24 added socket in params
@@ -496,8 +496,7 @@ async function apiSearch(missingAssets, socket) {
     if (missingAssetOrder.oAuthRequired) {
       const token = await getOAuthToken(missingAssetOrder);
       console.log("token: ", token);
-      missingAssetOrder.token = token.oAuthToken;
-      missingAssetOrder.expiration_time = token.oAuthTokenExpiration;
+      missingAssetOrder.token = token;
 
       console.log("token data", token);
     }
@@ -953,6 +952,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lambdaResponse", async (data) => {
+    console.log("lambdaResponse: ", data);
     const searchId = Object.keys(data)[0];
     lambdaSocketIds[socket.id] = searchId;
 
