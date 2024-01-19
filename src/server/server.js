@@ -684,10 +684,10 @@ async function insertDB(socket, searchId) {
     "serverStorage[searchId].clientSocketId : 683 ",
     serverStorage[searchId].clientSocketId
   );
-  // io.to(serverStorage[searchId].clientSocketId).emit(
-  //   "searchResults",
-  //   apiCacheResults
-  // );
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "searchResults",
+    apiCacheResults
+  );
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
@@ -982,7 +982,7 @@ io.on("connection", (socket) => {
       "serverStorage[data?.searchId].clientSocketId : ",
       serverStorage[data?.searchId].clientSocketId
     );
-    // io.to(serverStorage[data?.searchId].clientSocketId).emit('chat message', data.msg);
+    io.to(serverStorage[data?.searchId].clientSocketId).emit('searchResults', apiData[data.searchId]);
     // insertDB(socket, data?.searchId);
   });
 });
