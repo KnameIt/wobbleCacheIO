@@ -191,8 +191,8 @@ async function searchOpenSearchGlobalCache(endpoint, lockLists, event) {
         },
       },
     });
-    console.log('clientOpensearch', clientOpensearch);
-    console.log('response: ', response);
+    console.log("clientOpensearch", clientOpensearch);
+    console.log("response: ", response);
     console.log("Search response:", response.body?.hits?.hits?.length);
     let searchResults = response.body?.hits?.hits;
     const searchResultsSource = extractSourceContent(searchResults);
@@ -392,7 +392,7 @@ async function searchGlobalCache(whatWeNeed, event) {
         event
       );
 
-      console.log('response: ', response);
+      console.log("response: ", response);
 
       const responseLength = response.length;
       // More than enough was found, we can push to globalCacheAssets
@@ -407,7 +407,6 @@ async function searchGlobalCache(whatWeNeed, event) {
       }
       // Not enough were found, we need to file missingAsset request
       else if (responseLength < endpoint.needed) {
-        
         var cacheItems = response;
         cacheItems.forEach(function (item) {
           item.searchId = endpoint.searchId;
@@ -676,8 +675,14 @@ async function clientSocketLamda(clientParams) {
 //updated insertDB function
 async function insertDB(socket, searchId) {
   let apiCacheResults = apiData[searchId].results;
-  console.log("serverStorage[searchId].clientSocketId : 683 ", serverStorage[searchId].clientSocketId);
-  io.to(serverStorage[searchId].clientSocketId).emit('searchResults', apiCacheResults);
+  console.log(
+    "serverStorage[searchId].clientSocketId : 683 ",
+    serverStorage[searchId].clientSocketId
+  );
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "searchResults",
+    apiCacheResults
+  );
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
@@ -685,7 +690,6 @@ async function insertDB(socket, searchId) {
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
-
     apiCacheResults.forEach((apiResult) => {
       const globalCacheItem = {};
       globalCacheItem.id = apiData[searchId].assetVendorId + "-" + apiResult.id;
@@ -711,7 +715,10 @@ async function insertDB(socket, searchId) {
     });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  io.to(serverStorage[searchId].clientSocketId).emit("searchResults", wobbleCache);
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "searchResults",
+    wobbleCache
+  );
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -720,9 +727,12 @@ async function insertDB(socket, searchId) {
     suppliedWobbleCacheKey
   );
 
-  io.to(serverStorage[searchId].clientSocketId).emit("wobbleCacheKey", wobbleCacheKey);
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "wobbleCacheKey",
+    wobbleCacheKey
+  );
   console.log("sending to Global Cache");
-  
+
   if (wobbleCacheKey?.acknowledged) {
     delete apiData[searchId];
     delete serverStorage[searchId];
@@ -869,7 +879,7 @@ io.on("connection", (socket) => {
             wobbleCacheMode,
             suppliedWobbleCacheKey,
             globalCacheAssets,
-            clientSocketId: socket.id
+            clientSocketId: socket.id,
           };
         });
         // console.log("missingAssets 798: ", JSON.stringify(serverStorage));
@@ -962,9 +972,12 @@ io.on("connection", (socket) => {
     console.log("final response searchid : ", data?.searchId);
     // console.log("final response data", data);
     // console.log("global api search id data one ", apiData[data?.searchId]);
-    console.log("serverStorage[data?.searchId].clientSocketId : ", serverStorage[data?.searchId].clientSocketId);
+    console.log(
+      "serverStorage[data?.searchId].clientSocketId : ",
+      serverStorage[data?.searchId].clientSocketId
+    );
     // io.to(serverStorage[data?.searchId].clientSocketId).emit('chat message', data.msg);
-    insertDB(socket, data?.searchId);
+    // insertDB(socket, data?.searchId);
   });
 });
 
