@@ -720,10 +720,10 @@ async function insertDB(socket, searchId) {
     });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  // io.to(serverStorage[searchId].clientSocketId).emit(
-  //   "searchResults",
-  //   wobbleCache
-  // );
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "searchResults",
+    wobbleCache
+  );
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -732,11 +732,11 @@ async function insertDB(socket, searchId) {
     suppliedWobbleCacheKey
   );
 
-  // io.to(serverStorage[searchId].clientSocketId).emit(
-  //   "wobbleCacheKey",
-  //   wobbleCacheKey
-  // );
-  // console.log("sending to Global Cache");
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "wobbleCacheKey",
+    wobbleCacheKey
+  );
+  console.log("sending to Global Cache");
 
   if (wobbleCacheKey?.acknowledged) {
     delete apiData[searchId];
