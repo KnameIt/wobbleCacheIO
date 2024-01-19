@@ -472,11 +472,14 @@ async function getOAuthToken(missingAssetOrder) {
       });
 
       missingAssetOrder.oAuthToken = integrationProfile.oAuthToken;
+      missingAssetOrder.oAuthTokenExpiration =
+        integrationProfile.oAuthTokenExpiration;
+
       // console.log("missingAssetOrder: ", missingAssetOrder);
     }
 
     //   console.log("missingAssetOrder token: ", missingAssetOrder.oAuthToken);
-    return missingAssetOrder.oAuthToken;
+    return missingAssetOrder;
   }
 }
 //1-10-24 added socket in params
@@ -493,7 +496,10 @@ async function apiSearch(missingAssets, socket) {
     if (missingAssetOrder.oAuthRequired) {
       const token = await getOAuthToken(missingAssetOrder);
       console.log("token: ", token);
-      missingAssetOrder.token = token;
+      missingAssetOrder.token = token.oAuthToken;
+      missingAssetOrder.expiration_time = token.oAuthTokenExpiration;
+
+      console.log("token data", token);
     }
     if (functionARN) {
       console.log("functionARN: 498 ", functionARN);
@@ -516,7 +522,7 @@ async function apiSearch(missingAssets, socket) {
           let resultData = await JSON.parse(responseBuffer.toString("utf8"));
           //e-11-01-2024
           // console.log("functionARN event response data ", resultData);
-          // let insertRecords = await insertDB(socket, resultData);
+          // let insertRecords = await  (socket, resultData);
           // console.log("insertRecords: ", insertRecords);
           // socket.emit("searchResults", resultData);
           return resultData;
