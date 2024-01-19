@@ -952,6 +952,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lambdaResponse", async (data) => {
+    console.log("lambdaResponse: ", data);
     const searchId = Object.keys(data)[0];
     lambdaSocketIds[socket.id] = searchId;
 
