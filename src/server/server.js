@@ -679,10 +679,10 @@ async function insertDB(socket, searchId) {
     "serverStorage[searchId].clientSocketId : 683 ",
     serverStorage[searchId].clientSocketId
   );
-  io.to(serverStorage[searchId].clientSocketId).emit(
-    "searchResults",
-    apiCacheResults
-  );
+  // io.to(serverStorage[searchId].clientSocketId).emit(
+  //   "searchResults",
+  //   apiCacheResults
+  // );
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
@@ -715,10 +715,10 @@ async function insertDB(socket, searchId) {
     });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  io.to(serverStorage[searchId].clientSocketId).emit(
-    "searchResults",
-    wobbleCache
-  );
+  // io.to(serverStorage[searchId].clientSocketId).emit(
+  //   "searchResults",
+  //   wobbleCache
+  // );
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -727,11 +727,11 @@ async function insertDB(socket, searchId) {
     suppliedWobbleCacheKey
   );
 
-  io.to(serverStorage[searchId].clientSocketId).emit(
-    "wobbleCacheKey",
-    wobbleCacheKey
-  );
-  console.log("sending to Global Cache");
+  // io.to(serverStorage[searchId].clientSocketId).emit(
+  //   "wobbleCacheKey",
+  //   wobbleCacheKey
+  // );
+  // console.log("sending to Global Cache");
 
   if (wobbleCacheKey?.acknowledged) {
     delete apiData[searchId];
@@ -757,7 +757,7 @@ io.on("connection", (socket) => {
     //     insertDB();
     //   }
     // }
-    console.log("User disconnected");
+    console.log("User disconnected: ", socket.id);
   });
 
   // Listen for the 'sendMessage' event from the client
