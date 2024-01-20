@@ -2,6 +2,8 @@ const http = require("http");
 const socketIO = require("socket.io", {
   maxHttpBufferSize: 1e8,
   pingTimeout: 60000,
+  pingInterval: 25000, // Adjust as needed
+  transports: ['websocket'], // Use only WebSockets
 });
 const cors = require("cors");
 
