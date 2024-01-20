@@ -754,11 +754,15 @@ async function insertDB(socket, searchId) {
   return wobbleCacheKey.insertedId;
 }
 
+function ping(socket){
+  socket.emit("ping", {"message": "ping"});
+  tm = setTimeout(function () {
+}, 1000);
+}
+
 io.on("connection", (socket) => {
   console.log("A user connected: ", socket.id);
-  setInterval(socket.emit("ping", {
-    message: "ping from server"
-  }), 1000);
+  setInterval(ping(socket), 1000);
   
   socket.on("disconnect", (reason) => {
     console.log("reason for disconnecting", reason);
