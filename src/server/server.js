@@ -976,9 +976,9 @@ io.on("connection", (socket) => {
       console.log("saved to GlobalCache");
     }
   });
-
+  let counterData = 0;
   socket.on("lambdaResponse", async (data) => {
-    console.log("lambdaResponse: ", data);
+    console.log("lambdaResponse count: ", counterData++);
     const searchId = Object.keys(data)[0];
     // lambdaSocketIds[socket.id] = searchId;
 
