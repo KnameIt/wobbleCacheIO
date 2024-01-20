@@ -754,7 +754,20 @@ async function insertDB(socket, searchId) {
 
 io.on("connection", (socket) => {
   console.log("A user connected: ", socket.id);
-  socket.on("disconnect", () => {
+  socket.on("disconnect", (reason) => {
+    console.log("reason for disconnecting", reason);
+    const searchId = lambdaSocketIds[socket.id];
+    // if (searchId != undefined || searchId != null) {
+    //   // if (!searchId.includes[(null, undefined)]) {
+    //   if (serverStorage[searchId] != undefined) {
+    //     insertDB();
+    //   }
+    // }
+    console.log("User disconnected: ", socket.id);
+  });
+
+  socket.on("error", (error) => {
+    console.log("error occured", error);
     const searchId = lambdaSocketIds[socket.id];
     // if (searchId != undefined || searchId != null) {
     //   // if (!searchId.includes[(null, undefined)]) {
@@ -982,7 +995,10 @@ io.on("connection", (socket) => {
       "serverStorage[data?.searchId].clientSocketId : ",
       serverStorage[data?.searchId].clientSocketId
     );
-    io.to(serverStorage[data?.searchId].clientSocketId).emit('searchResults', apiData[data.searchId]);
+    io.to(serverStorage[data?.searchId].clientSocketId).emit(
+      "searchResults",
+      apiData[data.searchId]
+    );
     // insertDB(socket, data?.searchId);
   });
 });
