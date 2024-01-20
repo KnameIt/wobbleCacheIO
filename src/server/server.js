@@ -765,7 +765,7 @@ io.on("connection", (socket) => {
     ping(socket);
   }, 1000);
 
-  socket.on("ping", function (cmessage) {
+  socket.on("server-ping", function (cmessage) {
     console.log("client message: ", cmessage);
   });
 
