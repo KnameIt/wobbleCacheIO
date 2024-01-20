@@ -3,7 +3,7 @@ const socketIO = require("socket.io", {
   maxHttpBufferSize: 1e8,
   pingTimeout: 60000,
   pingInterval: 25000, // Adjust as needed
-  transports: ['websocket'], // Use only WebSockets
+  transports: ["websocket"], // Use only WebSockets
 });
 const cors = require("cors");
 
@@ -754,16 +754,17 @@ async function insertDB(socket, searchId) {
   return wobbleCacheKey.insertedId;
 }
 
-function ping(socket){
-  socket.emit("ping", {"message": "ping"});
-  tm = setTimeout(function () {
-}, 1000);
+function ping(socket) {
+  socket.emit("ping", { message: "ping" });
+  tm = setTimeout(function () {}, 1000);
 }
 
 io.on("connection", (socket) => {
   console.log("A user connected: ", socket.id);
-  setInterval(ping(socket), 1000);
-  
+  setInterval(function () {
+    ping(socket);
+  }, 1000);
+
   socket.on("disconnect", (reason) => {
     console.log("reason for disconnecting", reason);
     const searchId = lambdaSocketIds[socket.id];
