@@ -765,6 +765,10 @@ io.on("connection", (socket) => {
     ping(socket);
   }, 1000);
 
+  socket.on("ping", function (cmessage) {
+    console.log("client message: ", cmessage);
+  });
+
   socket.on("disconnect", (reason) => {
     console.log("reason for disconnecting", reason);
     const searchId = lambdaSocketIds[socket.id];
