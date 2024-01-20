@@ -756,6 +756,10 @@ async function insertDB(socket, searchId) {
 
 io.on("connection", (socket) => {
   console.log("A user connected: ", socket.id);
+  setInterval(socket.emit("ping", {
+    message: "ping from server"
+  }), 1000);
+  
   socket.on("disconnect", (reason) => {
     console.log("reason for disconnecting", reason);
     const searchId = lambdaSocketIds[socket.id];
