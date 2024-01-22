@@ -996,10 +996,11 @@ io.on("connection", (socket) => {
   socket.on("lambdaResponse", async (data) => {
     console.log("lambdaResponse count: ", counterData++);
     const searchId = Object.keys(data)[0];
-    console.log("lambdaResponse: ", data[searchId])
+    console.log("lambdaResponse: ", data[searchId][0].id)
     lambdaSocketIds[socket.id] = searchId;
 
     if (apiData.hasOwnProperty(searchId)) {
+      console.log("searchId found...", JSON.stringify(apiData[searchId]));
       apiData[searchId].results = apiData[searchId].results.concat(
         data[searchId]
       );
@@ -1008,6 +1009,7 @@ io.on("connection", (socket) => {
           ? data[searchId].supplied
           : 0;
     } else {
+      console.log("searchId not found...", apiData[searchId]);
       apiData[searchId] = {};
       apiData[searchId] = data["dataPayload"];
       apiData[searchId].results = [];
