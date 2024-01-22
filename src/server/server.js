@@ -1029,7 +1029,7 @@ io.on("connection", (socket) => {
       apiData[data.searchId]
     );
     console.log("results length: ", apiData[data?.searchId].results.length);
-    // insertDB(socket, data?.searchId);
+    insertDB(socket, data?.searchId);
   });
 });
 
