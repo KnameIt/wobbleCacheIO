@@ -995,8 +995,8 @@ io.on("connection", (socket) => {
   let counterData = 0;
   socket.on("lambdaResponse", async (data) => {
     console.log("lambdaResponse count: ", counterData++);
-    console.log("lambdaResponse: ", data[searchId])
     const searchId = Object.keys(data)[0];
+    console.log("lambdaResponse: ", data[searchId])
     lambdaSocketIds[socket.id] = searchId;
 
     if (apiData.hasOwnProperty(searchId)) {
