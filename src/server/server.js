@@ -995,25 +995,26 @@ io.on("connection", (socket) => {
   let counterData = 0;
   socket.on("lambdaResponse", async (data) => {
     console.log("lambdaResponse count: ", counterData++);
+    console.log("lambdaResponse: ", data[searchId])
     const searchId = Object.keys(data)[0];
-    // lambdaSocketIds[socket.id] = searchId;
+    lambdaSocketIds[socket.id] = searchId;
 
-    // if (apiData.hasOwnProperty(searchId)) {
-    //   apiData[searchId].results = apiData[searchId].results.concat(
-    //     data[searchId]
-    //   );
-    //   apiData[searchId].supplied =
-    //     apiData[searchId].supplied + (data[searchId].supplied != undefined)
-    //       ? data[searchId].supplied
-    //       : 0;
-    // } else {
-    //   apiData[searchId] = {};
-    //   apiData[searchId] = data["dataPayload"];
-    //   apiData[searchId].results = [];
-    //   apiData[searchId].results = apiData[searchId].results.concat(
-    //     data[searchId]
-    //   );
-    // }
+    if (apiData.hasOwnProperty(searchId)) {
+      apiData[searchId].results = apiData[searchId].results.concat(
+        data[searchId]
+      );
+      apiData[searchId].supplied =
+        apiData[searchId].supplied + (data[searchId].supplied != undefined)
+          ? data[searchId].supplied
+          : 0;
+    } else {
+      apiData[searchId] = {};
+      apiData[searchId] = data["dataPayload"];
+      apiData[searchId].results = [];
+      apiData[searchId].results = apiData[searchId].results.concat(
+        data[searchId]
+      );
+    }
   });
 
   socket.on("finalResponse", (data) => {
