@@ -26,7 +26,7 @@ const lambda = new LambdaClient({ region: "us-east-1" });
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
 let serverStorage = {};
 let apiData = {};
-let lambdaSocketIds = {};
+// let lambdaSocketIds = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -752,11 +752,6 @@ async function insertDB(socket, searchId) {
   return wobbleCacheKey.insertedId;
 }
 
-function ping(socket) {
-  socket.emit("ping", { message: "ping" });
-  tm = setTimeout(function () {}, 1000);
-}
-
 io.on("connection", (socket) => {
   var currentdate = new Date(); 
   var datetime = "Last Sync: " + currentdate.getDate() + "/"
@@ -767,13 +762,6 @@ io.on("connection", (socket) => {
                   + currentdate.getSeconds();
   console.log("A user connected: ", socket.id);
   console.log("socket connect time ", datetime)
-  setInterval(function () {
-    ping(socket);
-  }, 1000);
-
-  socket.on("server-ping", function (cmessage) {
-    console.log("client message: ", cmessage);
-  });
 
   socket.on("disconnect", (reason) => {
     var currentdate = new Date(); 
@@ -996,8 +984,7 @@ io.on("connection", (socket) => {
   socket.on("lambdaResponse", async (data) => {
     console.log("lambdaResponse count: ", counterData++);
     const searchId = Object.keys(data)[0];
-    lambdaSocketIds[socket.id] = searchId;
-
+    // lambdaSocketIds[socket.id] = searchId;
     if (apiData.hasOwnProperty(searchId)) {
       apiData[searchId].results = apiData[searchId].results.concat(
         data[searchId]
@@ -1018,15 +1005,9 @@ io.on("connection", (socket) => {
 
   socket.on("finalResponse", (data) => {
     console.log("final response searchid : ", data?.searchId);
-    // console.log("final response data", data);
-    // console.log("global api search id data one ", apiData[data?.searchId]);
     console.log(
       "serverStorage[data?.searchId].clientSocketId : ",
       serverStorage[data?.searchId].clientSocketId
-    );
-    io.to(serverStorage[data?.searchId].clientSocketId).emit(
-      "searchResults",
-      apiData[data.searchId]
     );
     console.log("results length: ", apiData[data?.searchId].results.length);
     insertDB(socket, data?.searchId);
