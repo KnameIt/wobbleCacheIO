@@ -758,7 +758,15 @@ function ping(socket) {
 }
 
 io.on("connection", (socket) => {
+  var currentdate = new Date(); 
+  var datetime = "Last Sync: " + currentdate.getDate() + "/"
+                  + (currentdate.getMonth()+1)  + "/" 
+                  + currentdate.getFullYear() + " @ "  
+                  + currentdate.getHours() + ":"  
+                  + currentdate.getMinutes() + ":" 
+                  + currentdate.getSeconds();
   console.log("A user connected: ", socket.id);
+  console.log("socket connect time ", datetime)
   setInterval(function () {
     ping(socket);
   }, 1000);
@@ -768,6 +776,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", (reason) => {
+    var currentdate = new Date(); 
+    var datetime = "Last Sync: " + currentdate.getDate() + "/"
+                    + (currentdate.getMonth()+1)  + "/" 
+                    + currentdate.getFullYear() + " @ "  
+                    + currentdate.getHours() + ":"  
+                    + currentdate.getMinutes() + ":" 
+                    + currentdate.getSeconds();
     console.log("reason for disconnecting", reason);
     // const searchId = lambdaSocketIds[socket.id];
     // if (searchId != undefined || searchId != null) {
@@ -776,6 +791,7 @@ io.on("connection", (socket) => {
     //     insertDB();
     //   }
     // }
+    console.log("disconnect time ", datetime)
     console.log("User disconnected: ", socket.id);
   });
 
