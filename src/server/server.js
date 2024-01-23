@@ -1022,13 +1022,13 @@ io.on("connection", (socket) => {
 
   socket.on("finalResponse", (data) => {
     console.log("final response searchid : ", data?.searchId);
-    console.log(
-      "serverStorage[data?.searchId].clientSocketId : ",
-      serverStorage[data?.searchId].clientSocketId
-    );
+    // console.log(
+    //   "serverStorage[data?.searchId].clientSocketId : ",
+    //   serverStorage[data?.searchId].clientSocketId
+    // );
     // console.log("results length: ", apiData[data?.searchId].results.length);
-    console.info("results length: ", apiData[data?.searchId].results);
-    insertDB(socket, data?.searchId);
+    // console.info("results length: ", apiData[data?.searchId].results);
+    // insertDB(socket, data?.searchId);
   });
 });
 
