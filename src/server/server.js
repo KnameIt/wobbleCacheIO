@@ -26,7 +26,8 @@ const lambda = new LambdaClient({ region: "us-east-1" });
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
 let serverStorage = {};
 let apiData = {};
-// let lambdaSocketIds = {};
+let lambdaSocketIds = {};
+let assetsNeededPages = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -493,6 +494,7 @@ async function apiSearch(missingAssets, socket) {
     const missingAssetOrder = missingAssets[i];
     missingAssetOrder.ip = process.env.IP || "34.203.199.165";
     missingAssetOrder.port = process.env.PORT || 3005;
+    assetsNeededPages[missingAssets[i].searchId] = {totalPages: Math.ceil((missingAssets[i].needed) / 100)};
     if (missingAssetOrder.oAuthRequired) {
       const token = await getOAuthToken(missingAssetOrder);
       console.log("token: ", token);
@@ -697,7 +699,6 @@ async function insertDB(socket, searchId) {
   if (apiCacheResults != undefined) {
     let objectIterate = Object.values(apiCacheResults);
     objectIterate.forEach((pageWiseResult, index) => {
-      console.info("pageWiseResult: ", pageWiseResult);
       console.info("index: ", index)
       pageWiseResult.forEach((apiResult) => {
       const globalCacheItem = {};
@@ -758,6 +759,12 @@ async function insertDB(socket, searchId) {
   return wobbleCacheKey.insertedId;
 }
 
+async function verifyLambdaResponse(searchId){
+    console.info("searchId inside verifyLambdaResponse: ", searchId);
+    const totalPages = assetsNeededPages[searchId].totalPages;
+    const receivedResponsePages = apiData[searchId].results 
+}
+
 io.on("connection", (socket) => {
   var currentdate = new Date(); 
   var datetime = "Last Sync: " + currentdate.getDate() + "/"
@@ -766,8 +773,8 @@ io.on("connection", (socket) => {
                   + currentdate.getHours() + ":"  
                   + currentdate.getMinutes() + ":" 
                   + currentdate.getSeconds();
-  console.log("A user connected: ", socket.id);
-  console.log("socket connect time ", datetime)
+  console.info("A user connected: ", socket.id);
+  console.info("socket connect time: ", datetime)
 
   socket.on("disconnect", (reason) => {
     var currentdate = new Date(); 
@@ -778,28 +785,23 @@ io.on("connection", (socket) => {
                     + currentdate.getMinutes() + ":" 
                     + currentdate.getSeconds();
     console.log("reason for disconnecting", reason);
-    // const searchId = lambdaSocketIds[socket.id];
+    const searchId = lambdaSocketIds[socket.id];
+    console.log("searchId: ", searchId);
+    console.info("assetsNeededPages: ", assetsNeededPages);
+    verifyLambdaResponse(searchId);
     // if (searchId != undefined || searchId != null) {
     //   // if (!searchId.includes[(null, undefined)]) {
     //   if (serverStorage[searchId] != undefined) {
     //     insertDB();
     //   }
     // }
-    console.log("disconnect time ", datetime)
+    console.log("disconnect time ", datetime);
     console.log("User disconnected: ", socket.id);
   });
 
-  socket.on("error", (error) => {
-    console.log("error occured", error);
-    // const searchId = lambdaSocketIds[socket.id];
-    // if (searchId != undefined || searchId != null) {
-    //   // if (!searchId.includes[(null, undefined)]) {
-    //   if (serverStorage[searchId] != undefined) {
-    //     insertDB();
-    //   }
-    // }
-    console.log("User disconnected: ", socket.id);
-  });
+  socket.on("lambdaSocketConnect", (data) => {
+    lambdaSocketIds[socket.id] = data.searchId
+  })
 
   // Listen for the 'sendMessage' event from the client
   socket.on("sendMessage", (data) => {
