@@ -695,10 +695,15 @@ async function insertDB(socket, searchId) {
 
   let apiSearchResults = [];
   if (apiCacheResults != undefined) {
-    apiCacheResults.forEach((apiResult) => {
+    let objectIterate = Object.values(apiCacheResults);
+    objectIterate.forEach((pageWiseResult, index) => {
+      console.info("pageWiseResult: ", pageWiseResult);
+      console.info("index: ", index)
+      pageWiseResult.forEach((apiResult) => {
       const globalCacheItem = {};
       globalCacheItem.id = apiData[searchId].assetVendorId + "-" + apiResult.id;
       globalCacheItem.src = apiResult.urls;
+      globalCacheItem.pageNumber = index+1;
       globalCacheItem.keywords = apiResult.tags;
       globalCacheItem.content = apiResult;
       globalCacheItem.userId = apiData[searchId].userId;
@@ -718,6 +723,7 @@ async function insertDB(socket, searchId) {
       }
       apiSearchResults.push(globalCacheItem);
     });
+  });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
   io.to(serverStorage[searchId].clientSocketId).emit(
@@ -984,14 +990,19 @@ io.on("connection", (socket) => {
   });
   let counterData = 0;
   socket.on("lambdaResponse", async (data) => {
-    console.log("lambdaResponse count: ", counterData++);
+    console.info("lambdaResponse count: ", counterData++);
     const searchId = Object.keys(data)[0];
-    console.log("data: ", data.pageNumber);
+    console.info("pageNumber: ", data.pageNumber);
     // lambdaSocketIds[socket.id] = searchId;
     if (apiData.hasOwnProperty(searchId)) {
-      apiData[searchId].results = apiData[searchId].results.concat(
-        data[searchId]
-      );
+      // apiData[searchId].results = apiData[searchId].results.concat(
+      //   data[searchId]
+      // );
+      if(apiData[searchId].results.hasOwnProperty(data?.pageNumber)){
+        apiData[searchId].results[data.pageNumber] = apiData[searchId].results[data.pageNumber].concat(data[searchId])
+      }else {
+        apiData[searchId].results[data.pageNumber] = data[searchId]
+      }
       apiData[searchId].supplied =
         apiData[searchId].supplied + (data[searchId].supplied != undefined)
           ? data[searchId].supplied
@@ -999,11 +1010,14 @@ io.on("connection", (socket) => {
     } else {
       apiData[searchId] = {};
       apiData[searchId] = data["dataPayload"];
-      apiData[searchId].results = [];
-      apiData[searchId].results = apiData[searchId].results.concat(
-        data[searchId]
-      );
+      // apiData[searchId].results = [];
+      // apiData[searchId].results = apiData[searchId].results.concat(
+      //   data[searchId]
+      // );
+      apiData[searchId].results = {};
+      apiData[searchId].results[data.pageNumber] = data[searchId]
     }
+    // console.info("results length: ", apiData[searchId]);
   });
 
   socket.on("finalResponse", (data) => {
@@ -1012,7 +1026,8 @@ io.on("connection", (socket) => {
       "serverStorage[data?.searchId].clientSocketId : ",
       serverStorage[data?.searchId].clientSocketId
     );
-    console.log("results length: ", apiData[data?.searchId].results.length);
+    // console.log("results length: ", apiData[data?.searchId].results.length);
+    console.info("results length: ", apiData[data?.searchId].results);
     insertDB(socket, data?.searchId);
   });
 });
