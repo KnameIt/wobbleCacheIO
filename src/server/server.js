@@ -562,7 +562,7 @@ async function processWobbleCacheRequest(event) {
 
   // Show how many I need for this ingredient
   let assetsNeeded = ingredientCount * preWobbleCount * gridCount * pages;
-  // console.log('assetsNeeded: ', assetsNeeded);
+  console.log('assetsNeeded: ', assetsNeeded);
 
   let perIngredientAssetsNeeded = assetsNeeded / ingredientCount;
 
@@ -917,6 +917,8 @@ io.on("connection", (socket) => {
             clientSocketId: socket.id,
           };
         });
+
+
         // console.log("missingAssets 798: ", JSON.stringify(serverStorage));
         // TODO: Send back the global cache results via socket.io asap back to meteor's wobble cache
         let apiCacheResults = await apiSearch(missingAssets, socket);
@@ -984,6 +986,7 @@ io.on("connection", (socket) => {
   socket.on("lambdaResponse", async (data) => {
     console.log("lambdaResponse count: ", counterData++);
     const searchId = Object.keys(data)[0];
+    console.log("data: ", data.pageNumber);
     // lambdaSocketIds[socket.id] = searchId;
     if (apiData.hasOwnProperty(searchId)) {
       apiData[searchId].results = apiData[searchId].results.concat(
