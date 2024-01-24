@@ -1161,6 +1161,7 @@ io.on("connection", (socket) => {
     // // console.log("results length: ", apiData[data?.searchId].results.length);
     // console.info("results length: ", apiData[data?.searchId].results);
     insertDB(socket, data?.searchId);
+
   });
 });
 
