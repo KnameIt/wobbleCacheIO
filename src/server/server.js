@@ -837,7 +837,7 @@ async function verifyLambdaResponse(lambdaEvent){
            const lambdaResponse = await lambdaInvoke(lambdaEvent); 
         }
       };
-    }else{
+    }else if(Object.keys(finalLambdaResponse[searchId]).length > 0){
       //checking pages level
       const pagesCount = Object.keys(finalLambdaResponse[searchId]);
       const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
@@ -1160,7 +1160,7 @@ io.on("connection", (socket) => {
     // );
     // // console.log("results length: ", apiData[data?.searchId].results.length);
     // console.info("results length: ", apiData[data?.searchId].results);
-    insertDB(socket, data?.searchId);
+    // insertDB(socket, data?.searchId);
 
   });
 });
