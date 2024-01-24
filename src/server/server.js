@@ -1103,7 +1103,15 @@ io.on("connection", (socket) => {
          tempResponseObject[searchId].receiveLength = counterData;
          tempResponseObject[searchId].pagesNeeded = data.pagesNeeded; 
       }else {
-         console.info("Data missed");
+        console.info("pageNumber wise........");
+        tempResponseObject[searchId].results[data.pageNumber] = data[searchId]
+        tempResponseObject[searchId].supplied =
+          tempResponseObject[searchId].supplied + (data[searchId].supplied != undefined)
+          ? data[searchId].supplied
+          : 0;
+         tempResponseObject[searchId].pageLength = data.pageLength; 
+         tempResponseObject[searchId].receiveLength = counterData;
+         tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
       }
       //old code ----------
       // if (apiData.hasOwnProperty(searchId)) {
