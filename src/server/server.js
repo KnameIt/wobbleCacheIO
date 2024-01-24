@@ -843,7 +843,9 @@ async function verifyLambdaResponse(lambdaEvent){
         console.info("missingPages: ", missingPages);
         lambdaEvent.pendingPages = missingPages;
         tempResponseObject = {};
-        let lambdaResponse = await lambdaInvoke(lambdaEvent);
+        if(missingPages.length){
+          let lambdaResponse = await lambdaInvoke(lambdaEvent);
+        }
         console.info("check finalLambdaRespose.....");
       }
     }
