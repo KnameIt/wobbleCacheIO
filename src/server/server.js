@@ -827,6 +827,7 @@ async function verifyLambdaResponse(lambdaEvent){
     console.info("searchId: ", lambdaEvent.searchId);
     console.info("needed: ", lambdaEvent.needed);
     const searchId = lambdaEvent.searchId;
+    console.info("finalLambdaResponse[searchId]: ", Object.keys(finalLambdaResponse[searchId]));
     if(Object.keys(tempResponseObject).length > 0){
       //checking single page data
       if(tempResponseObject.hasOwnProperty(searchId)){
@@ -837,7 +838,8 @@ async function verifyLambdaResponse(lambdaEvent){
            const lambdaResponse = await lambdaInvoke(lambdaEvent); 
         }
       };
-    }else if(Object.keys(finalLambdaResponse[searchId]).length > 0){
+    }
+    if(Object.keys(finalLambdaResponse[searchId]).length > 0){
       //checking pages level
       const pagesCount = Object.keys(finalLambdaResponse[searchId]);
       const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
@@ -846,12 +848,12 @@ async function verifyLambdaResponse(lambdaEvent){
       // console.info("pageNeeded value: ", pagesNeeded.pagesNeeded);
       if(pagesCount.length != pagesNeeded){
         const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
-        console.info(pagesArray);
+        console.info("pagesArray: ", pagesArray);
         let originalArrayLength = Array.from({length: pagesNeeded.pagesNeeded}, (v, i) => i+1);
         const missingPages = findMissingValues(pagesArray, originalArrayLength);
         console.info("missingPages: ", missingPages);
         lambdaEvent.pendingPages = missingPages;
-        const lambdaResponse = await lambdaInvoke(lambdaEvent);
+        let lambdaResponse = await lambdaInvoke(lambdaEvent);
         console.info("check finalLambdaRespose.....");
       }
     }    
