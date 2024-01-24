@@ -26,7 +26,10 @@ const lambda = new LambdaClient({ region: "us-east-1" });
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
 let serverStorage = {};
 let apiData = {};
-// let lambdaSocketIds = {};
+let lambdaSocketIds = {};
+let assetsNeededPages = {};
+let tempResponseObject = {};
+let finalLambdaResponse = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -482,6 +485,52 @@ async function getOAuthToken(missingAssetOrder) {
     return missingAssetOrder.oAuthToken;
   }
 }
+
+async function lambdaInvoke(missingAssetOrder){
+  console.log("lambda ready to Invoke.......", missingAssetOrder.pendingPages);
+  // const functionARN = missingAssetOrder[i].liveLambdaARN;
+  // if (missingAssetOrder.oAuthRequired) {
+  //   const token = await getOAuthToken(missingAssetOrder);
+  //   console.log("token: ", token);
+  //   missingAssetOrder.token = token;
+
+  //   console.log("token data", token);
+  // }
+  // if (functionARN) {
+  //   console.log("Lambda Function ARN: ", functionARN);
+  //   //console.log('missingAssetOrder: ', missingAssetOrder);
+  //   const payload = JSON.stringify(missingAssetOrder);
+
+  //   const command = new InvokeCommand({
+  //     FunctionName: functionARN,
+  //     InvocationType: "RequestResponse",
+  //     Payload: payload,
+  //   });
+
+  //   //   promises.push(
+  //   lambda
+  //     .send(command)
+  //     .then(async (data) => {
+  //       const responseBuffer = Buffer.from(data.Payload);
+  //       // console.log('responseBuffer: ', responseBuffer);
+  //       //s-11-01-2024
+  //       let resultData = await JSON.parse(responseBuffer.toString("utf8"));
+  //       //e-11-01-2024
+  //       // console.log("functionARN event response data ", resultData);
+  //       // let insertRecords = await  (socket, resultData);
+  //       // console.log("insertRecords: ", insertRecords);
+  //       // socket.emit("searchResults", resultData);
+  //       return resultData;
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //     });
+  //   //   );
+  // } else {
+  //   console.log("No functionARN");
+  // }
+}
+
 //1-10-24 added socket in params
 async function apiSearch(missingAssets, socket) {
   //   const promises = [];
@@ -493,6 +542,11 @@ async function apiSearch(missingAssets, socket) {
     const missingAssetOrder = missingAssets[i];
     missingAssetOrder.ip = process.env.IP || "34.203.199.165";
     missingAssetOrder.port = process.env.PORT || 3005;
+    // assetsNeededPages[missingAssets[i].searchId] = {}
+    // assetsNeededPages[missingAssets[i].searchId].totalPages = Math.ceil((missingAssets[i].needed) / 100);
+    // assetsNeededPages[missingAssets[i].searchId].event = missingAssetOrder 
+    // const lambdaInvoke = await lambdaInvoke(missingAssetOrder);
+    missingAssetOrder.pendingPages = [];
     if (missingAssetOrder.oAuthRequired) {
       const token = await getOAuthToken(missingAssetOrder);
       console.log("token: ", token);
@@ -679,83 +733,133 @@ async function clientSocketLamda(clientParams) {
 
 //updated insertDB function
 async function insertDB(socket, searchId) {
-  let apiCacheResults = apiData[searchId].results;
-  console.log(
-    "serverStorage[searchId].clientSocketId : 683 ",
-    serverStorage[searchId].clientSocketId
-  );
-  io.to(serverStorage[searchId].clientSocketId).emit(
-    "searchResults",
-    apiCacheResults
-  );
-  let wobbleCache = serverStorage[searchId].wobbleCache;
-  let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
-  let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
-  let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
+  console.info("Payload ready to insert in DB....");
+  delete finalLambdaResponse[searchId]
+  delete tempResponseObject[searchId]
+  // let apiCacheResults = apiData[searchId].results;
+  // console.log(
+  //   "serverStorage[searchId].clientSocketId : 683 ",
+  //   serverStorage[searchId].clientSocketId
+  // );
+  // io.to(serverStorage[searchId].clientSocketId).emit(
+  //   "searchResults",
+  //   apiCacheResults
+  // );
+  // let wobbleCache = serverStorage[searchId].wobbleCache;
+  // let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
+  // let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
+  // let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
 
-  let apiSearchResults = [];
-  if (apiCacheResults != undefined) {
-    let objectIterate = Object.values(apiCacheResults);
-    objectIterate.forEach((pageWiseResult, index) => {
-      console.info("pageWiseResult: ", pageWiseResult);
-      console.info("index: ", index)
-      pageWiseResult.forEach((apiResult) => {
-      const globalCacheItem = {};
-      globalCacheItem.id = apiData[searchId].assetVendorId + "-" + apiResult.id;
-      globalCacheItem.src = apiResult.urls;
-      globalCacheItem.pageNumber = index+1;
-      globalCacheItem.keywords = apiResult.tags;
-      globalCacheItem.content = apiResult;
-      globalCacheItem.userId = apiData[searchId].userId;
-      globalCacheItem.searchId = apiData[searchId].searchId;
-      globalCacheItem.ingredientId = apiData[searchId].ingredientId;
-      globalCacheItem.ingredientName = apiData[searchId].ingredientName;
-      globalCacheItem.ingredientType = apiData[searchId].ingredientType;
-      globalCacheItem.assetVendorId = apiData[searchId].assetVendorId;
-      globalCacheItem.vendorEndpointId = apiData[searchId].vendorEndpointId;
-      if (apiData[searchId].vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-        globalCacheItem.src = apiResult.urls.regular;
-      } else if (
-        apiData[searchId].vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
-      ) {
-        console.log("apiResult", apiResult.previews.live_site);
-        globalCacheItem.src = apiResult?.previews?.live_site?.url;
+  // let apiSearchResults = [];
+  // if (apiCacheResults != undefined) {
+  //   let objectIterate = Object.values(apiCacheResults);
+  //   objectIterate.forEach((pageWiseResult, index) => {
+  //     console.info("index: ", index)
+  //     pageWiseResult.forEach((apiResult) => {
+  //     const globalCacheItem = {};
+  //     globalCacheItem.id = apiData[searchId].assetVendorId + "-" + apiResult.id;
+  //     globalCacheItem.src = apiResult.urls;
+  //     globalCacheItem.pageNumber = index+1;
+  //     globalCacheItem.keywords = apiResult.tags;
+  //     globalCacheItem.content = apiResult;
+  //     globalCacheItem.userId = apiData[searchId].userId;
+  //     globalCacheItem.searchId = apiData[searchId].searchId;
+  //     globalCacheItem.ingredientId = apiData[searchId].ingredientId;
+  //     globalCacheItem.ingredientName = apiData[searchId].ingredientName;
+  //     globalCacheItem.ingredientType = apiData[searchId].ingredientType;
+  //     globalCacheItem.assetVendorId = apiData[searchId].assetVendorId;
+  //     globalCacheItem.vendorEndpointId = apiData[searchId].vendorEndpointId;
+  //     if (apiData[searchId].vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+  //       globalCacheItem.src = apiResult.urls.regular;
+  //     } else if (
+  //       apiData[searchId].vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+  //     ) {
+  //       console.log("apiResult", apiResult.previews.live_site);
+  //       globalCacheItem.src = apiResult?.previews?.live_site?.url;
+  //     }
+  //     apiSearchResults.push(globalCacheItem);
+  //   });
+  // });
+  // }
+  // wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
+  // io.to(serverStorage[searchId].clientSocketId).emit(
+  //   "searchResults",
+  //   wobbleCache
+  // );
+
+  // //15/01/2024
+  // const wobbleCacheKey = await sendToMongoWobbleCache(
+  //   wobbleCache,
+  //   wobbleCacheMode,
+  //   suppliedWobbleCacheKey
+  // );
+
+  // io.to(serverStorage[searchId].clientSocketId).emit(
+  //   "wobbleCacheKey",
+  //   wobbleCacheKey
+  // );
+  // console.log("sending to Global Cache");
+
+  // if (wobbleCacheKey?.acknowledged) {
+  //   delete apiData[searchId];
+  //   delete serverStorage[searchId];
+  // }
+  // Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
+  //   (error) => {
+  //     console.error("Error sending data to OpenSearch Global Cache:", error);
+  //   }
+  // );
+  // // socket.emit("wobbleCacheKey", wobbleCacheKey);
+  // console.log("wobbleCacheKey:1 ", wobbleCacheKey);
+  // return wobbleCacheKey.insertedId;
+}
+
+function findMissingValues(first, second) {
+    const spreaded = [...first, ...second];
+    return spreaded.filter(el => {
+       return !(first.includes(el) && second.includes(el));
+    })
+}
+
+async function verifyLambdaResponse(lambdaEvent){
+  try{
+    // console.info("searchId inside verifyLambdaResponse: ", lambdaEvent);
+    console.info("searchId: ", lambdaEvent.searchId);
+    console.info("needed: ", lambdaEvent.needed);
+    const searchId = lambdaEvent.searchId;
+    if(Object.keys(tempResponseObject).length > 0){
+      //checking single page data
+      if(tempResponseObject.hasOwnProperty(searchId)){
+        if(tempResponseObject[searchId].pageLength != tempResponseObject[searchId].receiveLength){
+           console.info("call lambda again....");
+           lambdaEvent.pendingPages = [];
+           tempResponseObject = {};
+           const lambdaResponse = await lambdaInvoke(lambdaEvent); 
+        }
+      };
+    }else{
+      //checking pages level
+      const pagesCount = Object.keys(finalLambdaResponse[searchId]);
+      const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
+      // console.info("pages : ", pagesCount);
+      // console.info("pageCount: ", pagesCount.length);
+      // console.info("pageNeeded value: ", pagesNeeded.pagesNeeded);
+      if(pagesCount.length != pagesNeeded){
+        const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
+        console.info(pagesArray);
+        let originalArrayLength = Array.from({length: pagesNeeded.pagesNeeded}, (v, i) => i+1);
+        const missingPages = findMissingValues(pagesArray, originalArrayLength);
+        console.info("missingPages: ", missingPages);
+        lambdaEvent.pendingPages = missingPages;
+        const lambdaResponse = await lambdaInvoke(lambdaEvent);
+        console.info("check finalLambdaRespose.....");
       }
-      apiSearchResults.push(globalCacheItem);
-    });
-  });
+    }    
+    // const totalPages = assetsNeededPages[searchId].totalPages;
+    // const receivedResponsePages = apiData[searchId].results 
+  }catch(err){
+    console.error("Error: ", err);
   }
-  wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  io.to(serverStorage[searchId].clientSocketId).emit(
-    "searchResults",
-    wobbleCache
-  );
-
-  //15/01/2024
-  const wobbleCacheKey = await sendToMongoWobbleCache(
-    wobbleCache,
-    wobbleCacheMode,
-    suppliedWobbleCacheKey
-  );
-
-  io.to(serverStorage[searchId].clientSocketId).emit(
-    "wobbleCacheKey",
-    wobbleCacheKey
-  );
-  console.log("sending to Global Cache");
-
-  if (wobbleCacheKey?.acknowledged) {
-    delete apiData[searchId];
-    delete serverStorage[searchId];
-  }
-  Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
-    (error) => {
-      console.error("Error sending data to OpenSearch Global Cache:", error);
-    }
-  );
-  // socket.emit("wobbleCacheKey", wobbleCacheKey);
-  console.log("wobbleCacheKey:1 ", wobbleCacheKey);
-  return wobbleCacheKey.insertedId;
 }
 
 io.on("connection", (socket) => {
@@ -766,8 +870,8 @@ io.on("connection", (socket) => {
                   + currentdate.getHours() + ":"  
                   + currentdate.getMinutes() + ":" 
                   + currentdate.getSeconds();
-  console.log("A user connected: ", socket.id);
-  console.log("socket connect time ", datetime)
+  console.info("A user connected: ", socket.id);
+  console.info("socket connect time: ", datetime)
 
   socket.on("disconnect", (reason) => {
     var currentdate = new Date(); 
@@ -778,28 +882,19 @@ io.on("connection", (socket) => {
                     + currentdate.getMinutes() + ":" 
                     + currentdate.getSeconds();
     console.log("reason for disconnecting", reason);
-    // const searchId = lambdaSocketIds[socket.id];
-    // if (searchId != undefined || searchId != null) {
-    //   // if (!searchId.includes[(null, undefined)]) {
-    //   if (serverStorage[searchId] != undefined) {
-    //     insertDB();
-    //   }
-    // }
-    console.log("disconnect time ", datetime)
+    const lambdaEvent = lambdaSocketIds[socket.id];
+    console.info("lambdaEvent: ", lambdaEvent?.searchId);
+    if(lambdaEvent?.searchId != undefined){
+      console.info("verifyLambdaResponse function called.......");
+      verifyLambdaResponse(lambdaEvent);
+    }
+    console.log("disconnect time ", datetime);
     console.log("User disconnected: ", socket.id);
   });
 
-  socket.on("error", (error) => {
-    console.log("error occured", error);
-    // const searchId = lambdaSocketIds[socket.id];
-    // if (searchId != undefined || searchId != null) {
-    //   // if (!searchId.includes[(null, undefined)]) {
-    //   if (serverStorage[searchId] != undefined) {
-    //     insertDB();
-    //   }
-    // }
-    console.log("User disconnected: ", socket.id);
-  });
+  socket.on("lambdaSocketConnect", (data) => {
+    lambdaSocketIds[socket.id] = data.event
+  })
 
   // Listen for the 'sendMessage' event from the client
   socket.on("sendMessage", (data) => {
@@ -990,45 +1085,83 @@ io.on("connection", (socket) => {
   });
   let counterData = 0;
   socket.on("lambdaResponse", async (data) => {
-    console.info("lambdaResponse count: ", counterData++);
+    counterData++;
+    console.info("lambdaResponse count: ", counterData);
     const searchId = Object.keys(data)[0];
     console.info("pageNumber: ", data.pageNumber);
     // lambdaSocketIds[socket.id] = searchId;
-    if (apiData.hasOwnProperty(searchId)) {
-      // apiData[searchId].results = apiData[searchId].results.concat(
-      //   data[searchId]
-      // );
-      if(apiData[searchId].results.hasOwnProperty(data?.pageNumber)){
-        apiData[searchId].results[data.pageNumber] = apiData[searchId].results[data.pageNumber].concat(data[searchId])
-      }else {
-        apiData[searchId].results[data.pageNumber] = data[searchId]
-      }
-      apiData[searchId].supplied =
-        apiData[searchId].supplied + (data[searchId].supplied != undefined)
+    if (tempResponseObject.hasOwnProperty(searchId)) {
+      if (tempResponseObject[searchId].results.hasOwnProperty(data?.pageNumber)) {
+         tempResponseObject[searchId].results[data.pageNumber] = tempResponseObject[searchId].results[data.pageNumber].concat(data[searchId])
+         tempResponseObject[searchId].supplied =
+          tempResponseObject[searchId].supplied + (data[searchId].supplied != undefined)
           ? data[searchId].supplied
           : 0;
+         tempResponseObject[searchId].pageLength = data.pageLength; 
+         tempResponseObject[searchId].receiveLength = counterData;
+         tempResponseObject[searchId].pagesNeeded = data.pagesNeeded; 
+      }else {
+         console.info("Data missed");
+      }
+      //old code ----------
+      // if (apiData.hasOwnProperty(searchId)) {
+      // // apiData[searchId].results = apiData[searchId].results.concat(
+      // //   data[searchId]
+      // // );
+      // if(apiData[searchId].results.hasOwnProperty(data?.pageNumber)){
+      //   apiData[searchId].results[data.pageNumber] = apiData[searchId].results[data.pageNumber].concat(data[searchId])
+      // }else {
+      //   apiData[searchId].results[data.pageNumber] = data[searchId]
+      // }
+      // apiData[searchId].supplied =
+      //   apiData[searchId].supplied + (data[searchId].supplied != undefined)
+      //     ? data[searchId].supplied
+      //     : 0;
     } else {
-      apiData[searchId] = {};
-      apiData[searchId] = data["dataPayload"];
-      // apiData[searchId].results = [];
-      // apiData[searchId].results = apiData[searchId].results.concat(
-      //   data[searchId]
-      // );
-      apiData[searchId].results = {};
-      apiData[searchId].results[data.pageNumber] = data[searchId]
+      tempResponseObject[searchId] = {};
+      tempResponseObject[searchId] = data["dataPayload"];
+      tempResponseObject[searchId].results = {}
+      tempResponseObject[searchId].results[data.pageNumber] = data[searchId]
+      tempResponseObject[searchId].supplied = data.supplied
+      tempResponseObject[searchId].pageLength = data.pageLength;
+      tempResponseObject[searchId].receiveLength = counterData;
+      tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
+      //old code--------
+      // apiData[searchId] = {};
+      // apiData[searchId] = data["dataPayload"];
+      // // apiData[searchId].results = [];
+      // // apiData[searchId].results = apiData[searchId].results.concat(
+      // //   data[searchId]
+      // // );
+      // apiData[searchId].results = {};
+      // apiData[searchId].results[data.pageNumber] = data[searchId]
     }
     // console.info("results length: ", apiData[searchId]);
   });
 
   socket.on("finalResponse", (data) => {
-    console.log("final response searchid : ", data?.searchId);
+    console.log("final response searchId : ", data?.searchId);
+    const objectKey = Object.keys(tempResponseObject[data?.searchId].results)
+    console.log("objectKey: ", objectKey);
+    if(finalLambdaResponse.hasOwnProperty(data.searchId)){
+      finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
+    }else {
+      finalLambdaResponse[data?.searchId] = {}
+      finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
+    }
+
+    // finalLambdaResponse.push(tempResponseObject[data?.searchId]);
+    console.info("finalLambdaResponse: ", finalLambdaResponse);
+    tempResponseObject = {};
+    counterData = 0;
     // console.log(
     //   "serverStorage[data?.searchId].clientSocketId : ",
     //   serverStorage[data?.searchId].clientSocketId
     // );
-    // console.log("results length: ", apiData[data?.searchId].results.length);
+    // // console.log("results length: ", apiData[data?.searchId].results.length);
     // console.info("results length: ", apiData[data?.searchId].results);
-    // insertDB(socket, data?.searchId);
+    insertDB(socket, data?.searchId);
+
   });
 });
 
