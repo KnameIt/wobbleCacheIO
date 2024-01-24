@@ -1140,16 +1140,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("finalResponse", (data) => {
-    console.log("final response searchId : ", data?.searchId);
+    console.info("final response searchId : ", data?.searchId);
     const objectKey = Object.keys(tempResponseObject[data?.searchId].results)
-    console.log("objectKey: ", objectKey);
+    console.info("objectKey: ", objectKey);
+    console.info("pageIndex: ", objectKey[0]);
     if(finalLambdaResponse.hasOwnProperty(data.searchId)){
       finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
     }else {
       finalLambdaResponse[data?.searchId] = {}
       finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
     }
-
     // finalLambdaResponse.push(tempResponseObject[data?.searchId]);
     console.info("finalLambdaResponse: ", finalLambdaResponse);
     tempResponseObject = {};
