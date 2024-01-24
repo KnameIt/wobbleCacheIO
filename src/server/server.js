@@ -538,7 +538,7 @@ async function apiSearch(missingAssets, socket) {
   // console.log("missingAssets: 485 ", missingAssets);
 
   for (let i = 0; i < missingAssets.length; i++) {
-    // const functionARN = missingAssets[i].liveLambdaARN;
+    const functionARN = missingAssets[i].liveLambdaARN;
     const missingAssetOrder = missingAssets[i];
     missingAssetOrder.ip = process.env.IP || "34.203.199.165";
     missingAssetOrder.port = process.env.PORT || 3005;
