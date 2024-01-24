@@ -828,17 +828,6 @@ async function verifyLambdaResponse(lambdaEvent){
     console.info("needed: ", lambdaEvent.needed);
     const searchId = lambdaEvent.searchId;
     console.info("finalLambdaResponse[searchId]: ", Object.keys(finalLambdaResponse[searchId]));
-    if(Object.keys(tempResponseObject).length > 0){
-      //checking single page data
-      if(tempResponseObject.hasOwnProperty(searchId)){
-        if(tempResponseObject[searchId].pageLength != tempResponseObject[searchId].receiveLength){
-           console.info("call lambda again....");
-           lambdaEvent.pendingPages = [];
-           tempResponseObject = {};
-           const lambdaResponse = await lambdaInvoke(lambdaEvent); 
-        }
-      };
-    }
     if(Object.keys(finalLambdaResponse[searchId]).length > 0){
       //checking pages level
       const pagesCount = Object.keys(finalLambdaResponse[searchId]);
@@ -853,10 +842,22 @@ async function verifyLambdaResponse(lambdaEvent){
         const missingPages = findMissingValues(pagesArray, originalArrayLength);
         console.info("missingPages: ", missingPages);
         lambdaEvent.pendingPages = missingPages;
+        tempResponseObject = {};
         let lambdaResponse = await lambdaInvoke(lambdaEvent);
         console.info("check finalLambdaRespose.....");
       }
-    }    
+    }
+    // if(Object.keys(tempResponseObject).length > 0){
+    //   //checking single page data
+    //   if(tempResponseObject.hasOwnProperty(searchId)){
+    //     if(tempResponseObject[searchId].pageLength != tempResponseObject[searchId].receiveLength){
+    //        console.info("call lambda again....");
+    //        lambdaEvent.pendingPages = [];
+    //        tempResponseObject = {};
+    //        const lambdaResponse = await lambdaInvoke(lambdaEvent); 
+    //     }
+    //   };
+    // }    
     // const totalPages = assetsNeededPages[searchId].totalPages;
     // const receivedResponsePages = apiData[searchId].results 
   }catch(err){
