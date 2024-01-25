@@ -96,7 +96,7 @@ async function ensureIndexExists(indexName) {
 
 async function bulkImportToOpenSearch(index, items) {
   const bulkBody = [];
-  console.log("items", items[0]);
+  // console.log("items", items[0]);
   items.forEach((item) => {
     //   bulkBody.push({ index: { _index: index, _id: item.id } });
     bulkBody.push(item);
@@ -775,7 +775,7 @@ async function insertDB(searchId) {
   if (apiCacheResults != undefined) {
     // let objectIterate = Object.values(apiCacheResults);
     apiCacheResults.forEach((apiResult, index) => {
-      console.info("index: ", index)
+      // console.info("index: ", index)
       // pageWiseResult.forEach((apiResult) => {
       const globalCacheItem = {};
       globalCacheItem.id = dbPayload.assetVendorId + "-" + apiResult.id;
@@ -795,7 +795,7 @@ async function insertDB(searchId) {
       } else if (
         dbPayload.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
       ) {
-        console.log("apiResult", apiResult.previews.live_site);
+        // console.log("apiResult", apiResult.previews.live_site);
         globalCacheItem.src = apiResult?.previews?.live_site?.url;
       }
       apiSearchResults.push(globalCacheItem);
