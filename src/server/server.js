@@ -488,47 +488,47 @@ async function getOAuthToken(missingAssetOrder) {
 
 async function lambdaInvoke(missingAssetOrder){
   console.log("lambda ready to Invoke.......", missingAssetOrder.pendingPages);
-  // const functionARN = missingAssetOrder[i].liveLambdaARN;
-  // if (missingAssetOrder.oAuthRequired) {
-  //   const token = await getOAuthToken(missingAssetOrder);
-  //   console.log("token: ", token);
-  //   missingAssetOrder.token = token;
+  const functionARN = missingAssetOrder.liveLambdaARN;
+  if (missingAssetOrder.oAuthRequired) {
+    const token = await getOAuthToken(missingAssetOrder);
+    console.log("token: ", token);
+    missingAssetOrder.token = token;
 
-  //   console.log("token data", token);
-  // }
-  // if (functionARN) {
-  //   console.log("Lambda Function ARN: ", functionARN);
-  //   //console.log('missingAssetOrder: ', missingAssetOrder);
-  //   const payload = JSON.stringify(missingAssetOrder);
+    console.log("token data", token);
+  }
+  if (functionARN) {
+    console.log("Lambda Function ARN: ", functionARN);
+    //console.log('missingAssetOrder: ', missingAssetOrder);
+    const payload = JSON.stringify(missingAssetOrder);
 
-  //   const command = new InvokeCommand({
-  //     FunctionName: functionARN,
-  //     InvocationType: "RequestResponse",
-  //     Payload: payload,
-  //   });
+    const command = new InvokeCommand({
+      FunctionName: functionARN,
+      InvocationType: "RequestResponse",
+      Payload: payload,
+    });
 
-  //   //   promises.push(
-  //   lambda
-  //     .send(command)
-  //     .then(async (data) => {
-  //       const responseBuffer = Buffer.from(data.Payload);
-  //       // console.log('responseBuffer: ', responseBuffer);
-  //       //s-11-01-2024
-  //       let resultData = await JSON.parse(responseBuffer.toString("utf8"));
-  //       //e-11-01-2024
-  //       // console.log("functionARN event response data ", resultData);
-  //       // let insertRecords = await  (socket, resultData);
-  //       // console.log("insertRecords: ", insertRecords);
-  //       // socket.emit("searchResults", resultData);
-  //       return resultData;
-  //     })
-  //     .catch((err) => {
-  //       console.error(err);
-  //     });
-  //   //   );
-  // } else {
-  //   console.log("No functionARN");
-  // }
+    //   promises.push(
+    lambda
+      .send(command)
+      .then(async (data) => {
+        const responseBuffer = Buffer.from(data.Payload);
+        // console.log('responseBuffer: ', responseBuffer);
+        //s-11-01-2024
+        let resultData = await JSON.parse(responseBuffer.toString("utf8"));
+        //e-11-01-2024
+        // console.log("functionARN event response data ", resultData);
+        // let insertRecords = await  (socket, resultData);
+        // console.log("insertRecords: ", insertRecords);
+        // socket.emit("searchResults", resultData);
+        return resultData;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+    //   );
+  } else {
+    console.log("No functionARN");
+  }
 }
 
 //1-10-24 added socket in params
@@ -832,9 +832,9 @@ async function verifyLambdaResponse(lambdaEvent){
       //checking pages level
       const pagesCount = Object.keys(finalLambdaResponse[searchId]);
       const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
-      // console.info("pages : ", pagesCount);
-      // console.info("pageCount: ", pagesCount.length);
-      // console.info("pageNeeded value: ", pagesNeeded.pagesNeeded);
+      console.info("pages : ", pagesCount);
+      console.info("pageCount: ", pagesCount?.length);
+      console.info("pageNeeded value: ", pagesNeeded?.pagesNeeded);
       if(pagesCount.length != pagesNeeded){
         const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
         console.info("pagesArray: ", pagesArray);
