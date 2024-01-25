@@ -754,85 +754,87 @@ async function insertDB(searchId) {
     searchId: lambdaResponseObject[0].searchId,
     userId: lambdaResponseObject[0].userId
    };
-   console.log("dbPayload: ", dbPayload);
+   console.log("dbPayload results length: ", dbPayload.results.length);
   // delete finalLambdaResponse[searchId]
   // delete tempResponseObject[searchId]
-  // let apiCacheResults = apiData[searchId].results;
-  // console.log(
-  //   "serverStorage[searchId].clientSocketId : 683 ",
-  //   serverStorage[searchId].clientSocketId
-  // );
+  let apiCacheResults = dbPayload.results;
+  console.log(
+    "serverStorage[searchId].clientSocketId : 683 ",
+    serverStorage[searchId].clientSocketId
+  );
   // io.to(serverStorage[searchId].clientSocketId).emit(
   //   "searchResults",
   //   apiCacheResults
   // );
-  // let wobbleCache = serverStorage[searchId].wobbleCache;
-  // let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
-  // let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
-  // let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
+  let wobbleCache = serverStorage[searchId].wobbleCache;
+  let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
+  let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
+  let globalCacheAssets = serverStorage[searchId].globalCacheAssets;
 
-  // let apiSearchResults = [];
-  // if (apiCacheResults != undefined) {
-  //   let objectIterate = Object.values(apiCacheResults);
-  //   objectIterate.forEach((pageWiseResult, index) => {
-  //     console.info("index: ", index)
-  //     pageWiseResult.forEach((apiResult) => {
-  //     const globalCacheItem = {};
-  //     globalCacheItem.id = apiData[searchId].assetVendorId + "-" + apiResult.id;
-  //     globalCacheItem.src = apiResult.urls;
-  //     globalCacheItem.pageNumber = index+1;
-  //     globalCacheItem.keywords = apiResult.tags;
-  //     globalCacheItem.content = apiResult;
-  //     globalCacheItem.userId = apiData[searchId].userId;
-  //     globalCacheItem.searchId = apiData[searchId].searchId;
-  //     globalCacheItem.ingredientId = apiData[searchId].ingredientId;
-  //     globalCacheItem.ingredientName = apiData[searchId].ingredientName;
-  //     globalCacheItem.ingredientType = apiData[searchId].ingredientType;
-  //     globalCacheItem.assetVendorId = apiData[searchId].assetVendorId;
-  //     globalCacheItem.vendorEndpointId = apiData[searchId].vendorEndpointId;
-  //     if (apiData[searchId].vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
-  //       globalCacheItem.src = apiResult.urls.regular;
-  //     } else if (
-  //       apiData[searchId].vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
-  //     ) {
-  //       console.log("apiResult", apiResult.previews.live_site);
-  //       globalCacheItem.src = apiResult?.previews?.live_site?.url;
-  //     }
-  //     apiSearchResults.push(globalCacheItem);
-  //   });
-  // });
-  // }
-  // wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
+  let apiSearchResults = [];
+  if (apiCacheResults != undefined) {
+    // let objectIterate = Object.values(apiCacheResults);
+    apiCacheResults.forEach((apiResult, index) => {
+      console.info("index: ", index)
+      // pageWiseResult.forEach((apiResult) => {
+      const globalCacheItem = {};
+      globalCacheItem.id = dbPayload.assetVendorId + "-" + apiResult.id;
+      globalCacheItem.src = apiResult.urls;
+      globalCacheItem.pageNumber = index+1;
+      globalCacheItem.keywords = apiResult.tags;
+      globalCacheItem.content = apiResult;
+      globalCacheItem.userId = dbPayload.userId;
+      globalCacheItem.searchId = dbPayload.searchId;
+      globalCacheItem.ingredientId = dbPayload.ingredientId;
+      globalCacheItem.ingredientName = dbPayload.ingredientName;
+      globalCacheItem.ingredientType = dbPayload.ingredientType;
+      globalCacheItem.assetVendorId = dbPayload.assetVendorId;
+      globalCacheItem.vendorEndpointId = dbPayload.vendorEndpointId;
+      if (dbPayload.vendorEndpointId === "clcaxnyytj0o50ak472r3y299") {
+        globalCacheItem.src = apiResult.urls.regular;
+      } else if (
+        dbPayload.vendorEndpointId === "clcecey82qevd0ake6o2v1id2"
+      ) {
+        console.log("apiResult", apiResult.previews.live_site);
+        globalCacheItem.src = apiResult?.previews?.live_site?.url;
+      }
+      apiSearchResults.push(globalCacheItem);
+    // });
+  });
+  }
+  wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
   // io.to(serverStorage[searchId].clientSocketId).emit(
   //   "searchResults",
   //   wobbleCache
   // );
 
-  // //15/01/2024
-  // const wobbleCacheKey = await sendToMongoWobbleCache(
-  //   wobbleCache,
-  //   wobbleCacheMode,
-  //   suppliedWobbleCacheKey
-  // );
+  //15/01/2024
+  const wobbleCacheKey = await sendToMongoWobbleCache(
+    wobbleCache,
+    wobbleCacheMode,
+    suppliedWobbleCacheKey
+  );
 
   // io.to(serverStorage[searchId].clientSocketId).emit(
   //   "wobbleCacheKey",
   //   wobbleCacheKey
   // );
-  // console.log("sending to Global Cache");
+  console.log("sending to Global Cache");
 
-  // if (wobbleCacheKey?.acknowledged) {
-  //   delete apiData[searchId];
-  //   delete serverStorage[searchId];
-  // }
+  if (wobbleCacheKey?.acknowledged) {
+    delete apiData[searchId];
+    delete serverStorage[searchId];
+    delete finalLambdaResponse[searchId];
+    delete tempResponseObject[searchId];
+  }
   // Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
   //   (error) => {
   //     console.error("Error sending data to OpenSearch Global Cache:", error);
   //   }
   // );
-  // // socket.emit("wobbleCacheKey", wobbleCacheKey);
-  // console.log("wobbleCacheKey:1 ", wobbleCacheKey);
-  // return wobbleCacheKey.insertedId;
+  // socket.emit("wobbleCacheKey", wobbleCacheKey);
+  console.log("wobbleCacheKey:1 ", wobbleCacheKey);
+  return wobbleCacheKey.insertedId;
 }
 
 function findMissingValues(first, second) {
