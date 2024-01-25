@@ -734,14 +734,14 @@ async function clientSocketLamda(clientParams) {
 //updated insertDB function
 async function insertDB(searchId) {
   console.info("Payload ready to insert in Database.......", searchId);
-  console.info("finalLambdaResponse[searchId]: ", finalLambdaResponse[searchId]);
+  // console.info("finalLambdaResponse[searchId]: ", finalLambdaResponse[searchId]);
   let lambdaResponseObject = Object.values(finalLambdaResponse[searchId])
   let pagesItem = [];
   lambdaResponseObject.map((element)=>{
          let pages = Object.values(element.results)
          pagesItem.push(...pages);
   })
-  console.log("pagesItems: ", pagesItem.flat(1));
+  // console.log("pagesItems: ", pagesItem.flat(1));
   const dbPayload = {
     results: pagesItem.flat(1),
     ingredientName: lambdaResponseObject[0].ingredientName,
@@ -762,10 +762,10 @@ async function insertDB(searchId) {
     "serverStorage[searchId].clientSocketId : 683 ",
     serverStorage[searchId].clientSocketId
   );
-  // io.to(serverStorage[searchId].clientSocketId).emit(
-  //   "searchResults",
-  //   apiCacheResults
-  // );
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "searchResults",
+    apiCacheResults
+  );
   let wobbleCache = serverStorage[searchId].wobbleCache;
   let wobbleCacheMode = serverStorage[searchId].wobbleCacheMode;
   let suppliedWobbleCacheKey = serverStorage[searchId].suppliedWobbleCacheKey;
@@ -780,7 +780,7 @@ async function insertDB(searchId) {
       const globalCacheItem = {};
       globalCacheItem.id = dbPayload.assetVendorId + "-" + apiResult.id;
       globalCacheItem.src = apiResult.urls;
-      globalCacheItem.pageNumber = index+1;
+      // globalCacheItem.pageNumber = index+1;
       globalCacheItem.keywords = apiResult.tags;
       globalCacheItem.content = apiResult;
       globalCacheItem.userId = dbPayload.userId;
@@ -803,10 +803,10 @@ async function insertDB(searchId) {
   });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
-  // io.to(serverStorage[searchId].clientSocketId).emit(
-  //   "searchResults",
-  //   wobbleCache
-  // );
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "searchResults",
+    wobbleCache
+  );
 
   //15/01/2024
   const wobbleCacheKey = await sendToMongoWobbleCache(
@@ -815,10 +815,10 @@ async function insertDB(searchId) {
     suppliedWobbleCacheKey
   );
 
-  // io.to(serverStorage[searchId].clientSocketId).emit(
-  //   "wobbleCacheKey",
-  //   wobbleCacheKey
-  // );
+  io.to(serverStorage[searchId].clientSocketId).emit(
+    "wobbleCacheKey",
+    wobbleCacheKey
+  );
   console.log("sending to Global Cache");
 
   if (wobbleCacheKey?.acknowledged) {
@@ -827,12 +827,11 @@ async function insertDB(searchId) {
     delete finalLambdaResponse[searchId];
     delete tempResponseObject[searchId];
   }
-  // Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
-  //   (error) => {
-  //     console.error("Error sending data to OpenSearch Global Cache:", error);
-  //   }
-  // );
-  // socket.emit("wobbleCacheKey", wobbleCacheKey);
+  Promise.resolve(sendToOpenSearchGlobalCache(apiSearchResults)).catch(
+    (error) => {
+      console.error("Error sending data to OpenSearch Global Cache:", error);
+    }
+  );
   console.log("wobbleCacheKey:1 ", wobbleCacheKey);
   return wobbleCacheKey.insertedId;
 }
