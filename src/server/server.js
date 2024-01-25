@@ -853,11 +853,11 @@ async function verifyLambdaResponse(lambdaEvent){
       }
     }
     else {
-      tempResponseObject = {};
-      finalLambdaResponse = {};
-      lambdaEvent.pendingPages = [];
+      // tempResponseObject = {};
+      // finalLambdaResponse = {};
+      // lambdaEvent.pendingPages = [];
       console.info("lambda Invoke again.....");
-      await lambdaFunctionInvoke(lambdaEvent);
+      // await lambdaFunctionInvoke(lambdaEvent);
     }
 
     // if(Object.keys(tempResponseObject).length > 0){
@@ -911,6 +911,13 @@ io.on("connection", (socket) => {
   socket.on("lambdaSocketConnect", (data) => {
     lambdaSocketIds[socket.id] = data.event
   })
+
+  setTimeout(() => {
+    socket.emit("socketDisconnectEvent", {
+      message: "socket disconnect event emit......."
+    })
+  }, 2000);
+
 
   // Listen for the 'sendMessage' event from the client
   socket.on("sendMessage", (data) => {
