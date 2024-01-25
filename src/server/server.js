@@ -486,7 +486,7 @@ async function getOAuthToken(missingAssetOrder) {
   }
 }
 
-async function lambdaInvoke(missingAssetOrder){
+async function lambdaFunctionInvoke(missingAssetOrder){
   console.log("lambda ready to Invoke.......", missingAssetOrder.pendingPages);
   const functionARN = missingAssetOrder.liveLambdaARN;
   if (missingAssetOrder.oAuthRequired) {
@@ -546,7 +546,7 @@ async function apiSearch(missingAssets, socket) {
     // assetsNeededPages[missingAssets[i].searchId] = {}
     // assetsNeededPages[missingAssets[i].searchId].totalPages = Math.ceil((missingAssets[i].needed) / 100);
     // assetsNeededPages[missingAssets[i].searchId].event = missingAssetOrder 
-    const lambdaInvoke = await lambdaInvoke(missingAssetOrder);
+    const lambdaResponse = await lambdaFunctionInvoke(missingAssetOrder);
     // if (missingAssetOrder.oAuthRequired) {
     //   const token = await getOAuthToken(missingAssetOrder);
     //   console.log("token: ", token);
@@ -846,7 +846,7 @@ async function verifyLambdaResponse(lambdaEvent){
           lambdaEvent.pendingPages = missingPages;
           tempResponseObject = {};
           if(missingPages.length){
-            let lambdaResponse = await lambdaInvoke(lambdaEvent);
+            let lambdaResponse = await lambdaFunctionInvoke(lambdaEvent);
           }
           console.info("check finalLambdaRespose.....");
         }
@@ -857,7 +857,7 @@ async function verifyLambdaResponse(lambdaEvent){
       finalLambdaResponse = {};
       lambdaEvent.pendingPages = [];
       console.info("lambda Invoke again.....");
-      await lambdaInvoke(lambdaEvent);
+      await lambdaFunctionInvoke(lambdaEvent);
     }
 
     // if(Object.keys(tempResponseObject).length > 0){
@@ -867,7 +867,7 @@ async function verifyLambdaResponse(lambdaEvent){
     //        console.info("call lambda again....");
     //        lambdaEvent.pendingPages = [];
     //        tempResponseObject = {};
-    //        const lambdaResponse = await lambdaInvoke(lambdaEvent); 
+    //        const lambdaResponse = await lambdaFunctionInvoke(lambdaEvent); 
     //     }
     //   };
     // }    
