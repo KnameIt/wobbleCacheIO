@@ -898,6 +898,10 @@ async function verifyLambdaResponse(lambdaEvent){
     // const totalPages = assetsNeededPages[searchId].totalPages;
     // const receivedResponsePages = apiData[searchId].results 
   }catch(err){
+    // delete apiData[searchId];
+    // delete serverStorage[searchId];
+    // delete finalLambdaResponse[searchId];
+    // delete tempResponseObject[searchId];
     console.error("Error: ", err);
   }
 }
@@ -1136,42 +1140,16 @@ io.on("connection", (socket) => {
     console.info("lambdaResponse count: ", counterData);
     const searchId = Object.keys(data)[0];
     console.info("pageNumber: ", data.pageNumber);
-    // lambdaSocketIds[socket.id] = searchId;
     if (tempResponseObject.hasOwnProperty(searchId)) {
-      if (tempResponseObject[searchId].results.hasOwnProperty(data?.pageNumber)) {
-         tempResponseObject[searchId].results[data.pageNumber] = tempResponseObject[searchId].results[data.pageNumber].concat(data[searchId])
-         tempResponseObject[searchId].supplied =
+        let isPageNumberExist = tempResponseObject[searchId].results.hasOwnProperty(data?.pageNumber);
+        tempResponseObject[searchId].results[data.pageNumber] = (isPageNumberExist?tempResponseObject[searchId].results[data.pageNumber].concat(data[searchId]):data[searchId]);
+      tempResponseObject[searchId].supplied =
           tempResponseObject[searchId].supplied + (data[searchId].supplied != undefined)
           ? data[searchId].supplied
           : 0;
-         tempResponseObject[searchId].pageLength = data.pageLength; 
-         tempResponseObject[searchId].receiveLength = counterData;
-         tempResponseObject[searchId].pagesNeeded = data.pagesNeeded; 
-      }else {
-        console.info("pageNumber wise........");
-        tempResponseObject[searchId].results[data.pageNumber] = data[searchId]
-        tempResponseObject[searchId].supplied =
-          tempResponseObject[searchId].supplied + (data[searchId].supplied != undefined)
-          ? data[searchId].supplied
-          : 0;
-         tempResponseObject[searchId].pageLength = data.pageLength; 
-         tempResponseObject[searchId].receiveLength = counterData;
-         tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
-      }
-      //old code ----------
-      // if (apiData.hasOwnProperty(searchId)) {
-      // // apiData[searchId].results = apiData[searchId].results.concat(
-      // //   data[searchId]
-      // // );
-      // if(apiData[searchId].results.hasOwnProperty(data?.pageNumber)){
-      //   apiData[searchId].results[data.pageNumber] = apiData[searchId].results[data.pageNumber].concat(data[searchId])
-      // }else {
-      //   apiData[searchId].results[data.pageNumber] = data[searchId]
-      // }
-      // apiData[searchId].supplied =
-      //   apiData[searchId].supplied + (data[searchId].supplied != undefined)
-      //     ? data[searchId].supplied
-      //     : 0;
+      tempResponseObject[searchId].pageLength = data.pageLength; 
+      tempResponseObject[searchId].receiveLength = counterData;
+      tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
     } else {
       tempResponseObject[searchId] = {};
       tempResponseObject[searchId] = data["dataPayload"];
@@ -1181,17 +1159,7 @@ io.on("connection", (socket) => {
       tempResponseObject[searchId].pageLength = data.pageLength;
       tempResponseObject[searchId].receiveLength = counterData;
       tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
-      //old code--------
-      // apiData[searchId] = {};
-      // apiData[searchId] = data["dataPayload"];
-      // // apiData[searchId].results = [];
-      // // apiData[searchId].results = apiData[searchId].results.concat(
-      // //   data[searchId]
-      // // );
-      // apiData[searchId].results = {};
-      // apiData[searchId].results[data.pageNumber] = data[searchId]
     }
-    // console.info("results length: ", apiData[searchId]);
   });
 
   socket.on("finalResponse", (data) => {
@@ -1205,18 +1173,13 @@ io.on("connection", (socket) => {
       finalLambdaResponse[data?.searchId] = {}
       finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
     }
-    // finalLambdaResponse.push(tempResponseObject[data?.searchId]);
     console.info("finalLambdaResponse: ", finalLambdaResponse);
     tempResponseObject = {};
     counterData = 0;
-    // console.log(
-    //   "serverStorage[data?.searchId].clientSocketId : ",
-    //   serverStorage[data?.searchId].clientSocketId
-    // );
-    // // console.log("results length: ", apiData[data?.searchId].results.length);
-    // console.info("results length: ", apiData[data?.searchId].results);
-    // insertDB(socket, data?.searchId);
-
+    io.to(serverStorage[data?.searchId].clientSocketId).emit(
+      "pageDetails",
+      {"page": 1, "totalPage": tempResponseObject[data?.searchId].pagesNeeded, "size": (Object.values(tempResponseObject[data?.searchId].results)).length, "data": tempResponseObject[data?.searchId]}
+    );
   });
 });
 
