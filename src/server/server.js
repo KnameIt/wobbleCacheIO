@@ -732,10 +732,31 @@ async function clientSocketLamda(clientParams) {
 }
 
 //updated insertDB function
-async function insertDB(socket, searchId) {
-  console.info("Payload ready to insert in DB....");
-  delete finalLambdaResponse[searchId]
-  delete tempResponseObject[searchId]
+async function insertDB(searchId) {
+  console.info("Payload ready to insert in Database.......", searchId);
+  console.info("finalLambdaResponse[searchId]: ", finalLambdaResponse[searchId]);
+  let lambdaResponseObject = Object.values(finalLambdaResponse[searchId])
+  let pagesItem = [];
+  lambdaResponseObject.map((element)=>{
+         let pages = Object.values(element.results)
+         pagesItem.push(...pages);
+  })
+  console.log("pagesItems: ", pagesItem.flat(1));
+  const dbPayload = {
+    results: pagesItem.flat(1),
+    ingredientName: lambdaResponseObject[0].ingredientName,
+    ingredientId: lambdaResponseObject[0].ingredientId,
+    ingredientType: lambdaResponseObject[0].ingredientType,
+    vendorEndpointId: lambdaResponseObject[0].vendorEndpointId,
+    assetVendorId: lambdaResponseObject[0].assetVendorId,
+    needed: lambdaResponseObject[0].needed,
+    cachingChoices: lambdaResponseObject[0].cachingChoices,
+    searchId: lambdaResponseObject[0].searchId,
+    userId: lambdaResponseObject[0].userId
+   };
+   console.log("dbPayload: ", dbPayload);
+  // delete finalLambdaResponse[searchId]
+  // delete tempResponseObject[searchId]
   // let apiCacheResults = apiData[searchId].results;
   // console.log(
   //   "serverStorage[searchId].clientSocketId : 683 ",
@@ -849,6 +870,8 @@ async function verifyLambdaResponse(lambdaEvent){
             let lambdaResponse = await lambdaFunctionInvoke(lambdaEvent);
           }
           console.info("check finalLambdaRespose.....");
+        }else {
+          insertDB(searchId);
         }
       }
     }
