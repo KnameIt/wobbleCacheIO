@@ -542,51 +542,51 @@ async function apiSearch(missingAssets, socket) {
     const missingAssetOrder = missingAssets[i];
     missingAssetOrder.ip = process.env.IP || "34.203.199.165";
     missingAssetOrder.port = process.env.PORT || 3005;
+    missingAssetOrder.pendingPages = [];
     // assetsNeededPages[missingAssets[i].searchId] = {}
     // assetsNeededPages[missingAssets[i].searchId].totalPages = Math.ceil((missingAssets[i].needed) / 100);
     // assetsNeededPages[missingAssets[i].searchId].event = missingAssetOrder 
-    // const lambdaInvoke = await lambdaInvoke(missingAssetOrder);
-    missingAssetOrder.pendingPages = [];
-    if (missingAssetOrder.oAuthRequired) {
-      const token = await getOAuthToken(missingAssetOrder);
-      console.log("token: ", token);
-      missingAssetOrder.token = token;
+    const lambdaInvoke = await lambdaInvoke(missingAssetOrder);
+    // if (missingAssetOrder.oAuthRequired) {
+    //   const token = await getOAuthToken(missingAssetOrder);
+    //   console.log("token: ", token);
+    //   missingAssetOrder.token = token;
 
-      console.log("token data", token);
-    }
-    if (functionARN) {
-      console.log("functionARN: 498 ", functionARN);
-      //console.log('missingAssetOrder: ', missingAssetOrder);
-      const payload = JSON.stringify(missingAssetOrder);
+    //   console.log("token data", token);
+    // }
+    // if (functionARN) {
+    //   console.log("functionARN: 498 ", functionARN);
+    //   //console.log('missingAssetOrder: ', missingAssetOrder);
+    //   const payload = JSON.stringify(missingAssetOrder);
 
-      const command = new InvokeCommand({
-        FunctionName: functionARN,
-        InvocationType: "RequestResponse",
-        Payload: payload,
-      });
+    //   const command = new InvokeCommand({
+    //     FunctionName: functionARN,
+    //     InvocationType: "RequestResponse",
+    //     Payload: payload,
+    //   });
 
-      //   promises.push(
-      lambda
-        .send(command)
-        .then(async (data) => {
-          const responseBuffer = Buffer.from(data.Payload);
-          // console.log('responseBuffer: ', responseBuffer);
-          //s-11-01-2024
-          let resultData = await JSON.parse(responseBuffer.toString("utf8"));
-          //e-11-01-2024
-          // console.log("functionARN event response data ", resultData);
-          // let insertRecords = await  (socket, resultData);
-          // console.log("insertRecords: ", insertRecords);
-          // socket.emit("searchResults", resultData);
-          return resultData;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-      //   );
-    } else {
-      console.log("No functionARN");
-    }
+    //   //   promises.push(
+    //   lambda
+    //     .send(command)
+    //     .then(async (data) => {
+    //       const responseBuffer = Buffer.from(data.Payload);
+    //       // console.log('responseBuffer: ', responseBuffer);
+    //       //s-11-01-2024
+    //       let resultData = await JSON.parse(responseBuffer.toString("utf8"));
+    //       //e-11-01-2024
+    //       // console.log("functionARN event response data ", resultData);
+    //       // let insertRecords = await  (socket, resultData);
+    //       // console.log("insertRecords: ", insertRecords);
+    //       // socket.emit("searchResults", resultData);
+    //       return resultData;
+    //     })
+    //     .catch((err) => {
+    //       console.error(err);
+    //     });
+    //   //   );
+    // } else {
+    //   console.log("No functionARN");
+    // }
   }
 
   //   const results = await Promise.all(promises);
@@ -827,28 +827,39 @@ async function verifyLambdaResponse(lambdaEvent){
     console.info("searchId: ", lambdaEvent.searchId);
     console.info("needed: ", lambdaEvent.needed);
     const searchId = lambdaEvent.searchId;
-    console.info("finalLambdaResponse[searchId]: ", Object.keys(finalLambdaResponse[searchId]));
-    if(Object.keys(finalLambdaResponse[searchId]).length > 0){
-      //checking pages level
-      const pagesCount = Object.keys(finalLambdaResponse[searchId]);
-      const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
-      console.info("pages : ", pagesCount);
-      console.info("pageCount: ", pagesCount?.length);
-      console.info("pageNeeded value: ", pagesNeeded?.pagesNeeded);
-      if(pagesCount.length != pagesNeeded){
-        const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
-        console.info("pagesArray: ", pagesArray);
-        let originalArrayLength = Array.from({length: pagesNeeded.pagesNeeded}, (v, i) => i+1);
-        const missingPages = findMissingValues(pagesArray, originalArrayLength);
-        console.info("missingPages: ", missingPages);
-        lambdaEvent.pendingPages = missingPages;
-        tempResponseObject = {};
-        if(missingPages.length){
-          let lambdaResponse = await lambdaInvoke(lambdaEvent);
+    console.info("finalLambdaResponse[searchId]: ", finalLambdaResponse[searchId]);
+    if(finalLambdaResponse[searchId] != undefined || finalLambdaResponse[searchId] != null){
+      console.info("finalLambdaResponse[searchId] array: ", Object.keys(finalLambdaResponse[searchId]));
+      if(Object.keys(finalLambdaResponse[searchId]).length > 0){
+        //checking pages level
+        const pagesCount = Object.keys(finalLambdaResponse[searchId]);
+        const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
+        console.info("pages : ", pagesCount);
+        console.info("pageCount: ", pagesCount?.length);
+        console.info("pageNeeded value: ", pagesNeeded?.pagesNeeded);
+        if(pagesCount.length != pagesNeeded){
+          const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
+          console.info("pagesArray: ", pagesArray);
+          let originalArrayLength = Array.from({length: pagesNeeded.pagesNeeded}, (v, i) => i+1);
+          const missingPages = findMissingValues(pagesArray, originalArrayLength);
+          console.info("missingPages: ", missingPages);
+          lambdaEvent.pendingPages = missingPages;
+          tempResponseObject = {};
+          if(missingPages.length){
+            let lambdaResponse = await lambdaInvoke(lambdaEvent);
+          }
+          console.info("check finalLambdaRespose.....");
         }
-        console.info("check finalLambdaRespose.....");
       }
     }
+    else {
+      tempResponseObject = {};
+      finalLambdaResponse = {};
+      lambdaEvent.pendingPages = [];
+      console.info("lambda Invoke again.....");
+      await lambdaInvoke(lambdaEvent);
+    }
+
     // if(Object.keys(tempResponseObject).length > 0){
     //   //checking single page data
     //   if(tempResponseObject.hasOwnProperty(searchId)){
