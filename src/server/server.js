@@ -858,7 +858,7 @@ async function verifyLambdaResponse(lambdaEvent){
         console.info("pages : ", pagesCount);
         console.info("pageCount: ", pagesCount?.length);
         console.info("pageNeeded value: ", pagesNeeded?.pagesNeeded);
-        if(pagesCount.length != pagesNeeded){
+        if(pagesCount.length != pagesNeeded?.pagesNeeded){
           const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
           console.info("pagesArray: ", pagesArray);
           let originalArrayLength = Array.from({length: pagesNeeded.pagesNeeded}, (v, i) => i+1);
