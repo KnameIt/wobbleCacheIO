@@ -1176,7 +1176,7 @@ io.on("connection", (socket) => {
     console.info("finalLambdaResponse: ", finalLambdaResponse);
     io.to(serverStorage[data?.searchId].clientSocketId).emit(
       "pageDetails",
-      {"page": 1, "totalPage": tempResponseObject[data?.searchId].pagesNeeded, "size": (Object.values(tempResponseObject[data?.searchId].results)).length, "data": tempResponseObject[data?.searchId]}
+      {"page": 1, "totalPage": tempResponseObject[data?.searchId].pagesNeeded, "size": (Object.values(tempResponseObject[data?.searchId].results))[0].length, functionName: data?.functionName, "data": tempResponseObject[data?.searchId]}
     );
     counterData = 0;
     tempResponseObject = {};
