@@ -912,11 +912,11 @@ io.on("connection", (socket) => {
     lambdaSocketIds[socket.id] = data.event
   })
 
-  setTimeout(() => {
-    socket.emit("socketDisconnectEvent", {
-      message: "socket disconnect event emit......."
-    })
-  }, 2000);
+  // setTimeout(() => {
+  //   socket.emit("socketDisconnectEvent", {
+  //     message: "socket disconnect event emit......."
+  //   })
+  // }, 1000);
 
 
   // Listen for the 'sendMessage' event from the client
