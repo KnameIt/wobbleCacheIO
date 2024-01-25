@@ -1174,12 +1174,12 @@ io.on("connection", (socket) => {
       finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
     }
     console.info("finalLambdaResponse: ", finalLambdaResponse);
-    tempResponseObject = {};
-    counterData = 0;
     io.to(serverStorage[data?.searchId].clientSocketId).emit(
       "pageDetails",
       {"page": 1, "totalPage": tempResponseObject[data?.searchId].pagesNeeded, "size": (Object.values(tempResponseObject[data?.searchId].results)).length, "data": tempResponseObject[data?.searchId]}
     );
+    counterData = 0;
+    tempResponseObject = {};
   });
 });
 
