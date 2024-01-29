@@ -30,6 +30,8 @@ let lambdaSocketIds = {};
 let assetsNeededPages = {};
 let tempResponseObject = {};
 let finalLambdaResponse = {};
+let socketInterval;
+let cursorPositions= {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -486,6 +488,25 @@ async function getOAuthToken(missingAssetOrder) {
   }
 }
 
+async function fetchIntervalDetail(){
+  try{
+      await client.connect();
+      const database = client.db("knameit");
+      const userConfigData = database.collection("userConfig");
+      const result = await userConfigData.findOne({});
+      await client.close();
+      console.log("result : ", result);
+      socketInterval = result.userStatusInterval
+      return socketInterval
+  }catch(error){
+      console.error("Error : ", error);
+  }
+  finally {
+    await client.close();
+  }
+
+}
+
 async function lambdaFunctionInvoke(missingAssetOrder){
   console.log("lambda ready to Invoke.......", missingAssetOrder.pendingPages);
   const functionARN = missingAssetOrder.liveLambdaARN;
@@ -906,7 +927,7 @@ async function verifyLambdaResponse(lambdaEvent){
   }
 }
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   var currentdate = new Date(); 
   var datetime = "Last Sync: " + currentdate.getDate() + "/"
                   + (currentdate.getMonth()+1)  + "/" 
@@ -915,7 +936,13 @@ io.on("connection", (socket) => {
                   + currentdate.getMinutes() + ":" 
                   + currentdate.getSeconds();
   console.info("A user connected: ", socket.id);
-  console.info("socket connect time: ", datetime)
+  console.info("socket connect time: ", datetime);
+  console.info("socketInterval: ", socketInterval);
+  socketInterval = await fetchIntervalDetail();
+
+  socket.emit("cursorInterval", {
+    userStatusInterval: socketInterval
+  })
 
   socket.on("disconnect", (reason) => {
     var currentdate = new Date(); 
@@ -933,18 +960,26 @@ io.on("connection", (socket) => {
       verifyLambdaResponse(lambdaEvent);
     }
     console.log("disconnect time ", datetime);
+    delete cursorPositions[socket.id]
     console.log("User disconnected: ", socket.id);
   });
+
+  socket.on("cursorPosition", (data)=>{
+    console.info("cursorPosition........");
+    if(Object.keys(data).length){
+      console.log("data: ", data);
+      cursorPositions[socket.id] = data.cursorPosition 
+    }
+
+    if(Object.keys(cursorPositions).length){
+      console.log("cursorPositions: ", cursorPositions);
+    }
+
+  })
 
   socket.on("lambdaSocketConnect", (data) => {
     lambdaSocketIds[socket.id] = data.event
   })
-
-  // setTimeout(() => {
-  //   socket.emit("socketDisconnectEvent", {
-  //     message: "socket disconnect event emit......."
-  //   })
-  // }, 1000);
 
 
   // Listen for the 'sendMessage' event from the client
