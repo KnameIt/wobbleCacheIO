@@ -968,11 +968,14 @@ io.on("connection", async (socket) => {
     console.info("cursorPosition........");
     if(Object.keys(data).length){
       console.log("data: ", data);
-      cursorPositions[socket.id] = data.cursorPosition 
+      cursorPositions[socket.id] = data.cursorPosition; 
     }
 
     if(Object.keys(cursorPositions).length){
       console.log("cursorPositions: ", cursorPositions);
+      socket.emit("cursorBroadcast", {
+        cursorPositions
+      })
     }
 
   })
