@@ -1001,6 +1001,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("searchEvent", async (event) => {
+    console.log("searchEvent: ", event);
     if (event.hasOwnProperty("queryTerm")) {
       const clientParams = {
         ip: process.env.IP || "34.203.199.165",
