@@ -609,7 +609,7 @@ async function apiSearch(missingAssets, socket) {
     //   console.log("No functionARN");
     // }
   }
-
+  //   testing build
   //   const results = await Promise.all(promises);
   console.log("lambda function call: 532 ");
   return "lambda function call";
