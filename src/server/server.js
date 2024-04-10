@@ -31,7 +31,7 @@ let assetsNeededPages = {};
 let tempResponseObject = {};
 let finalLambdaResponse = {};
 let socketInterval;
-let cursorPositions= {};
+let cursorPositions = {};
 // Replace with your OpenSearch cluster endpoint
 const OPENSEARCH_ENDPOINT =
   "https://search-global-cache-lzfadkxiisl4psussg724mjv6i.us-east-1.es.amazonaws.com";
@@ -198,8 +198,10 @@ async function searchOpenSearchGlobalCache(endpoint, lockLists, event) {
     });
     console.log("clientOpensearch", clientOpensearch);
     console.log("response: ", response);
+    console.log("response.body.hits.hits =====> ", response.body.hits.hits);
     console.log("Search response:", response.body?.hits?.hits?.length);
     let searchResults = response.body?.hits?.hits;
+    console.log("searchResults : ", searchResults);
     const searchResultsSource = extractSourceContent(searchResults);
     // socket.emit('searchResults', searchResultsSource);
     return searchResultsSource;
@@ -224,26 +226,26 @@ const tableNameProcess = process.env.API_KNAMEITSTORE_ITEMTABLE_NAME;
 console.log("tableNameProcess", tableNameProcess);
 
 const query = `query MyQuery {
-	listItems(filter: {or: {name: {contains: ""}}}) {
-	  items {
-		id
-		name
-		keywords
-		src
-		content
-		access
-		userId
-		ingredientId
-		ingredientName
-		ingredientType
-		projectId
-		searchId
-		clientId
-		cachingChoices
-		assetVendorId
-		vendorEndpointId
-	  }
-	}
+        listItems(filter: {or: {name: {contains: ""}}}) {
+          items {
+                id
+                name
+                keywords
+                src
+                content
+                access
+                userId
+                ingredientId
+                ingredientName
+                ingredientType
+                projectId
+                searchId
+                clientId
+                cachingChoices
+                assetVendorId
+                vendorEndpointId
+          }
+        }
   }`;
 
 const query2 = `
@@ -488,18 +490,18 @@ async function getOAuthToken(missingAssetOrder) {
   }
 }
 
-async function fetchIntervalDetail(){
-  try{
-      await client.connect();
-      const database = client.db("knameit");
-      const userConfigData = database.collection("userConfig");
-      const result = await userConfigData.findOne({});
-      await client.close();
-      console.log("result : ", result);
-      socketInterval = result.userStatusInterval
-      return socketInterval
-  }catch(error){
-      console.error("Error : ", error);
+async function fetchIntervalDetail() {
+  try {
+    await client.connect();
+    const database = client.db("knameit");
+    const userConfigData = database.collection("userConfig");
+    const result = await userConfigData.findOne({});
+    await client.close();
+    console.log("result : ", result);
+    socketInterval = result.userStatusInterval
+    return socketInterval
+  } catch (error) {
+    console.error("Error : ", error);
   }
   finally {
     await client.close();
@@ -507,7 +509,7 @@ async function fetchIntervalDetail(){
 
 }
 
-async function lambdaFunctionInvoke(missingAssetOrder){
+async function lambdaFunctionInvoke(missingAssetOrder) {
   console.log("lambda ready to Invoke.......", missingAssetOrder.pendingPages);
   const functionARN = missingAssetOrder.liveLambdaARN;
   if (missingAssetOrder.oAuthRequired) {
@@ -522,11 +524,14 @@ async function lambdaFunctionInvoke(missingAssetOrder){
     //console.log('missingAssetOrder: ', missingAssetOrder);
     const payload = JSON.stringify(missingAssetOrder);
 
+
+    console.info("cred=====>", credentials)
     const command = new InvokeCommand({
       FunctionName: functionARN,
       InvocationType: "RequestResponse",
       Payload: payload,
     });
+    console.info("command=>>", command)
 
     //   promises.push(
     lambda
@@ -566,7 +571,7 @@ async function apiSearch(missingAssets, socket) {
     missingAssetOrder.pendingPages = [];
     // assetsNeededPages[missingAssets[i].searchId] = {}
     // assetsNeededPages[missingAssets[i].searchId].totalPages = Math.ceil((missingAssets[i].needed) / 100);
-    // assetsNeededPages[missingAssets[i].searchId].event = missingAssetOrder 
+    // assetsNeededPages[missingAssets[i].searchId].event = missingAssetOrder
     const lambdaResponse = await lambdaFunctionInvoke(missingAssetOrder);
     // if (missingAssetOrder.oAuthRequired) {
     //   const token = await getOAuthToken(missingAssetOrder);
@@ -758,9 +763,9 @@ async function insertDB(searchId) {
   // console.info("finalLambdaResponse[searchId]: ", finalLambdaResponse[searchId]);
   let lambdaResponseObject = Object.values(finalLambdaResponse[searchId])
   let pagesItem = [];
-  lambdaResponseObject.map((element)=>{
-         let pages = Object.values(element.results)
-         pagesItem.push(...pages);
+  lambdaResponseObject.map((element) => {
+    let pages = Object.values(element.results)
+    pagesItem.push(...pages);
   })
   // console.log("pagesItems: ", pagesItem.flat(1));
   const dbPayload = {
@@ -774,8 +779,8 @@ async function insertDB(searchId) {
     cachingChoices: lambdaResponseObject[0].cachingChoices,
     searchId: lambdaResponseObject[0].searchId,
     userId: lambdaResponseObject[0].userId
-   };
-   console.log("dbPayload results length: ", dbPayload.results.length);
+  };
+  console.log("dbPayload results length: ", dbPayload.results.length);
   // delete finalLambdaResponse[searchId]
   // delete tempResponseObject[searchId]
   let apiCacheResults = dbPayload.results;
@@ -820,8 +825,8 @@ async function insertDB(searchId) {
         globalCacheItem.src = apiResult?.previews?.live_site?.url;
       }
       apiSearchResults.push(globalCacheItem);
-    // });
-  });
+      // });
+    });
   }
   wobbleCache.items = globalCacheAssets.concat(apiSearchResults);
   io.to(serverStorage[searchId].clientSocketId).emit(
@@ -858,41 +863,52 @@ async function insertDB(searchId) {
 }
 
 function findMissingValues(first, second) {
-    const spreaded = [...first, ...second];
-    return spreaded.filter(el => {
-       return !(first.includes(el) && second.includes(el));
-    })
+  const spreaded = [...first, ...second];
+  return spreaded.filter(el => {
+    return !(first.includes(el) && second.includes(el));
+  })
 }
 
-async function verifyLambdaResponse(lambdaEvent){
-  try{
+async function verifyLambdaResponse(lambdaEvent) {
+  try {
     // console.info("searchId inside verifyLambdaResponse: ", lambdaEvent);
-    console.info("searchId: ", lambdaEvent.searchId);
+    console.info("searchId in verifyLambdaResponse: ", lambdaEvent.searchId);
     console.info("needed: ", lambdaEvent.needed);
     const searchId = lambdaEvent.searchId;
     console.info("finalLambdaResponse[searchId]: ", finalLambdaResponse[searchId]);
-    if(finalLambdaResponse[searchId] != undefined || finalLambdaResponse[searchId] != null){
+    if (finalLambdaResponse[searchId] != undefined || finalLambdaResponse[searchId] != null) {
       console.info("finalLambdaResponse[searchId] array: ", Object.keys(finalLambdaResponse[searchId]));
-      if(Object.keys(finalLambdaResponse[searchId]).length > 0){
+      if (Object.keys(finalLambdaResponse[searchId]).length > 0) {
         //checking pages level
         const pagesCount = Object.keys(finalLambdaResponse[searchId]);
         const pagesNeeded = Object.values(finalLambdaResponse[searchId])[0];
         console.info("pages : ", pagesCount);
         console.info("pageCount: ", pagesCount?.length);
         console.info("pageNeeded value: ", pagesNeeded?.pagesNeeded);
-        if(pagesCount.length != pagesNeeded?.pagesNeeded){
+        if (pagesCount.length != pagesNeeded?.pagesNeeded) {
           const pagesArray = pagesCount.map(element => Number(element.replace(/'/g, '')));
           console.info("pagesArray: ", pagesArray);
-          let originalArrayLength = Array.from({length: pagesNeeded.pagesNeeded}, (v, i) => i+1);
+          let originalArrayLength = Array.from({ length: pagesNeeded.pagesNeeded }, (v, i) => i + 1);
           const missingPages = findMissingValues(pagesArray, originalArrayLength);
           console.info("missingPages: ", missingPages);
           lambdaEvent.pendingPages = missingPages;
           tempResponseObject = {};
-          if(missingPages.length){
-            let lambdaResponse = await lambdaFunctionInvoke(lambdaEvent);
+          if (missingPages.length) {
+            const resObject =
+              finalLambdaResponse[searchId][
+              Object.keys(finalLambdaResponse[searchId])[
+              Object.keys(finalLambdaResponse[searchId]).length - 1
+              ]
+              ]
+
+            lambdaEvent.lastCursorValue = resObject?.lastCursorValue
+            console.info("resobject===> ", resObject, Object.keys(finalLambdaResponse[searchId])[Object.keys(finalLambdaResponse[searchId]).length - 1])
+            if (resObject.hasOwnProperty('has_more') && resObject.has_more == false) return
+            let lambdaResponse = await lambdaFunctionInvoke(lambdaEvent)
           }
           console.info("check finalLambdaRespose.....");
-        }else {
+        } else {
+          console.log("inside else block and insertDB function  calling");
           insertDB(searchId);
         }
       }
@@ -912,13 +928,13 @@ async function verifyLambdaResponse(lambdaEvent){
     //        console.info("call lambda again....");
     //        lambdaEvent.pendingPages = [];
     //        tempResponseObject = {};
-    //        const lambdaResponse = await lambdaFunctionInvoke(lambdaEvent); 
+    //        const lambdaResponse = await lambdaFunctionInvoke(lambdaEvent);
     //     }
     //   };
-    // }    
+    // }
     // const totalPages = assetsNeededPages[searchId].totalPages;
-    // const receivedResponsePages = apiData[searchId].results 
-  }catch(err){
+    // const receivedResponsePages = apiData[searchId].results
+  } catch (err) {
     // delete apiData[searchId];
     // delete serverStorage[searchId];
     // delete finalLambdaResponse[searchId];
@@ -928,13 +944,13 @@ async function verifyLambdaResponse(lambdaEvent){
 }
 
 io.on("connection", async (socket) => {
-  var currentdate = new Date(); 
+  var currentdate = new Date();
   var datetime = "Last Sync: " + currentdate.getDate() + "/"
-                  + (currentdate.getMonth()+1)  + "/" 
-                  + currentdate.getFullYear() + " @ "  
-                  + currentdate.getHours() + ":"  
-                  + currentdate.getMinutes() + ":" 
-                  + currentdate.getSeconds();
+    + (currentdate.getMonth() + 1) + "/"
+    + currentdate.getFullYear() + " @ "
+    + currentdate.getHours() + ":"
+    + currentdate.getMinutes() + ":"
+    + currentdate.getSeconds();
   console.info("A user connected: ", socket.id);
   console.info("socket connect time: ", datetime);
   console.info("socketInterval: ", socketInterval);
@@ -945,17 +961,17 @@ io.on("connection", async (socket) => {
   })
 
   socket.on("disconnect", (reason) => {
-    var currentdate = new Date(); 
+    var currentdate = new Date();
     var datetime = "Last Sync: " + currentdate.getDate() + "/"
-                    + (currentdate.getMonth()+1)  + "/" 
-                    + currentdate.getFullYear() + " @ "  
-                    + currentdate.getHours() + ":"  
-                    + currentdate.getMinutes() + ":" 
-                    + currentdate.getSeconds();
+      + (currentdate.getMonth() + 1) + "/"
+      + currentdate.getFullYear() + " @ "
+      + currentdate.getHours() + ":"
+      + currentdate.getMinutes() + ":"
+      + currentdate.getSeconds();
     console.log("reason for disconnecting", reason);
     const lambdaEvent = lambdaSocketIds[socket.id];
     console.info("lambdaEvent: ", lambdaEvent?.searchId);
-    if(lambdaEvent?.searchId != undefined){
+    if (lambdaEvent?.searchId != undefined) {
       console.info("verifyLambdaResponse function called.......");
       verifyLambdaResponse(lambdaEvent);
     }
@@ -964,15 +980,15 @@ io.on("connection", async (socket) => {
     console.log("User disconnected: ", socket.id);
   });
 
-  socket.on("cursorPosition", (data)=>{
+  socket.on("cursorPosition", (data) => {
     console.info("cursorPosition........");
-    if(Object.keys(data).length){
+    if (Object.keys(data).length) {
       console.log("data: ", data);
-      cursorPositions[socket.id] = data.cursorPosition; 
+      cursorPositions[socket.id] = data.cursorPosition;
     }
 
-    if(Object.keys(cursorPositions).length){
-      console.log("cursorPositions: ", cursorPositions);
+    if (Object.keys(cursorPositions).length) {
+      //console.log("cursorPositions: ", cursorPositions);
       socket.emit("cursorBroadcast", {
         cursorPositions
       })
@@ -1176,20 +1192,26 @@ io.on("connection", async (socket) => {
   let counterData = 0;
   socket.on("lambdaResponse", async (data) => {
     counterData++;
+    console.log("==================================================");
+    console.log("Lambda Response called..............!")
     console.info("lambdaResponse count: ", counterData);
     const searchId = Object.keys(data)[0];
     console.info("pageNumber: ", data.pageNumber);
     if (tempResponseObject.hasOwnProperty(searchId)) {
-        let isPageNumberExist = tempResponseObject[searchId].results.hasOwnProperty(data?.pageNumber);
-        tempResponseObject[searchId].results[data.pageNumber] = (isPageNumberExist?tempResponseObject[searchId].results[data.pageNumber].concat(data[searchId]):data[searchId]);
+      console.log("In if condition in lambdaResponse....!");
+      let isPageNumberExist = tempResponseObject[searchId].results.hasOwnProperty(data?.pageNumber);
+      tempResponseObject[searchId].results[data.pageNumber] = (isPageNumberExist ? tempResponseObject[searchId].results[data.pageNumber].concat(data[searchId]) : data[searchId]);
       tempResponseObject[searchId].supplied =
-          tempResponseObject[searchId].supplied + (data[searchId].supplied != undefined)
+        tempResponseObject[searchId].supplied + (data[searchId].supplied != undefined)
           ? data[searchId].supplied
           : 0;
-      tempResponseObject[searchId].pageLength = data.pageLength; 
+      tempResponseObject[searchId].pageLength = data.pageLength;
       tempResponseObject[searchId].receiveLength = counterData;
       tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
+      tempResponseObject[searchId].lastCursorValue = data.lastCursorValue;
+      tempResponseObject[searchId].has_more = data.has_more;
     } else {
+      console.log("In else condition in lambdaResponse....!");
       tempResponseObject[searchId] = {};
       tempResponseObject[searchId] = data["dataPayload"];
       tempResponseObject[searchId].results = {}
@@ -1198,24 +1220,45 @@ io.on("connection", async (socket) => {
       tempResponseObject[searchId].pageLength = data.pageLength;
       tempResponseObject[searchId].receiveLength = counterData;
       tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
+      tempResponseObject[searchId].lastCursorValue = data.lastCursorValue
+      tempResponseObject[searchId].has_more = data.has_more
     }
   });
+
+  socket.on('updateHasMore', data => {
+    console.info("Data====> ", data)
+    if (finalLambdaResponse.hasOwnProperty(data.searchId)) {
+      const keyName = Object.keys(finalLambdaResponse[data.searchId])[
+        Object.keys(finalLambdaResponse[data.searchId]).length - 1
+      ]
+      console.info(
+        'updateHasMore ===> ',
+        data,
+        keyName,
+        finalLambdaResponse[data.searchId][keyName]
+      )
+      finalLambdaResponse[data.searchId][keyName].has_more = data.has_more
+    }
+  })
 
   socket.on("finalResponse", (data) => {
     console.info("final response searchId : ", data?.searchId);
     const objectKey = Object.keys(tempResponseObject[data?.searchId].results)
     console.info("objectKey: ", objectKey);
     console.info("pageIndex: ", objectKey[0]);
-    if(finalLambdaResponse.hasOwnProperty(data.searchId)){
+    if (finalLambdaResponse.hasOwnProperty(data.searchId)) {
       finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
-    }else {
+    } else {
       finalLambdaResponse[data?.searchId] = {}
       finalLambdaResponse[data?.searchId][objectKey[0]] = tempResponseObject[data?.searchId];
     }
     console.info("finalLambdaResponse: ", finalLambdaResponse);
+    console.log("tempResponseObject[data?.searchId].results -----> : ", tempResponseObject[data?.searchId].results);
+    console.log("Object.values(tempResponseObject[data?.searchId].results) : ", Object.values(tempResponseObject[data?.searchId].results));
+    console.log("======> : ", (Object.values(tempResponseObject[data?.searchId].results))[0].length);
     io.to(serverStorage[data?.searchId].clientSocketId).emit(
       "pageDetails",
-      {"page": 1, "totalPage": tempResponseObject[data?.searchId].pagesNeeded, "size": (Object.values(tempResponseObject[data?.searchId].results))[0].length, functionName: data?.functionName, "data": tempResponseObject[data?.searchId]}
+      { "page": 1, "totalPage": tempResponseObject[data?.searchId].pagesNeeded, "size": (Object.values(tempResponseObject[data?.searchId].results))[0].length, functionName: data?.functionName, "data": tempResponseObject[data?.searchId] }
     );
     counterData = 0;
     tempResponseObject = {};
