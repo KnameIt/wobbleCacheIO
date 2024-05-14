@@ -1267,6 +1267,28 @@ console.log("======> : " , (Object.values(tempResponseObject[data?.searchId].res
     counterData = 0;
     tempResponseObject = {};
   });
+
+  socket.on("autoComplete", data=>{
+    console.info("autoComplete ====== ", data)
+    const command = new InvokeCommand({
+      FunctionName: 'arn:aws:lambda:us-east-1:883581233691:function:wobbleHygraphSearch',
+      InvocationType: "RequestResponse",
+      Payload: JSON.stringify(data),
+    });
+    console.info("command=>>", command)
+    lambda
+      .send(command)
+      .then(async (data) => {
+        console.info("Then", data)
+        const responseBuffer = Buffer.from(data.Payload);
+        let resultData = await JSON.parse(responseBuffer.toString("utf8"));
+        socket.emit("autoComplete", { results : resultData})
+      })
+      .catch((err) => {
+        console.error("Error in the autoComplete topic",err);
+        socket.emit("autoComplete", { results : []})
+      });
+  })
 });
 
 const PORT = process.env.PORT || 3005;
