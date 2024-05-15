@@ -1271,7 +1271,7 @@ io.on("connection", async (socket) => {
   socket.on("autoComplete", data => {
     console.info("autoComplete ====== ", data)
     const command = new InvokeCommand({
-      FunctionName: 'arn:aws:lambda:us-east-1:883581233691:function:wobbleHygraphSearch',
+      FunctionName: 'arn:aws:lambda:us-east-1:883581233691:function:wobbleHygraphSearch-staging',
       InvocationType: "RequestResponse",
       Payload: JSON.stringify(data),
     });
