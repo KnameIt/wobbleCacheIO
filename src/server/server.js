@@ -1224,7 +1224,7 @@ io.on("connection", async (socket) => {
       tempResponseObject[searchId].receiveLength = counterData;
       tempResponseObject[searchId].pagesNeeded = data.pagesNeeded;
       tempResponseObject[searchId].lastCursorValue = data.lastCursorValue
-      tempResponseObject[searchId].has_more = data.has_more
+      tempResponseObject[searchId].has_more = data.has_more;
       tempResponseObject[searchId].nextPageToken = data.nextPageToken;
     }
   });
@@ -1267,58 +1267,63 @@ io.on("connection", async (socket) => {
     counterData = 0;
     tempResponseObject = {};
   });
-
   async function openSearchforautoSearch(data, index) {
-    console.log("data in opensearchforautosearch-->", data)
-    const searchQuery = data.payload.assetsNeeded[0].components[0].properties[0].locks[0].text;
-    const userId = data.payload.userId;
-    const assetVendorId = data.payload.assetsNeeded[0].assetVendors[0].id;
-    console.log("userId", userId);
-    console.log("assetVendorId", assetVendorId);
-    console.log("searchQuery--->", searchQuery);
+    try {
+      console.log("data in opensearchforautosearch-->", data)
+      const searchQuery = data.payload.assetsNeeded[0].components[0].properties[0].locks[0].text;
+      const userId = data.payload.userId;
+      const assetVendorId = data.payload.assetsNeeded[0].assetVendors[0].id;
+      console.log("userId", userId);
+      console.log("assetVendorId", assetVendorId);
+      console.log("searchQuery--->", searchQuery);
 
-    const response = await clientOpensearch.search({
-      index: index,
-      body: {
-        size: 5,
-        _source: ["content.image_urls"],
-        query: {
-          bool: {
-            must: [
-              {
-                match: {
-                  userId: "bJtbrTvLXwimCEZki"
+      const response = await clientOpensearch.search({
+        index: index,
+        body: {
+          size: 5,
+          _source: ["content.image_urls"],
+          query: {
+            bool: {
+              must: [
+                {
+                  match: {
+                    userId: userId
+                  }
+                },
+                {
+                  match: {
+                    assetVendorId: assetVendorId
+                  }
+                },
+                {
+                  multi_match: {
+                    query: searchQuery,
+                    fields: ["*"]
+                  }
                 }
-              },
-              {
-                match: {
-                  assetVendorId: "clcawue99ijj90biq8ya1r76b"
-                }
-              },
-              {
-                multi_match: {
-                  query: "2f73991c3b328dc58f92dc34908e3ba1",
-                  fields: ["*"]
-                }
-              }
-            ]
+              ]
+            }
           }
-        }
-      },
-    });
-    console.log("response in openSearchforautoSearch=======>", response);
-    console.log("response in openSearchforautoSearch=======>", JSON.stringify(response.body.hits.hits));
-    // return response;
+        },
+      });
+      console.log("response in openSearchforautoSearch=======>", response.body.hits.hits);
+      console.log("response JSON Stringify===>", JSON.stringify(response.body.hits.hits));
+      return response.body.hits.hits;
+    }
+    catch (err) {
+      console.log("data : ", data);
+      console.log("error while calling opensearch : ", err);
+    }
   }
   socket.on("autoComplete", async (data) => {
-    console.info("autoComplete ====== ", data.payload);
+    console.info("autoComplete ====== ", data)
     const index = 'globalcache';
-    const openSearchResponse = openSearchforautoSearch(data, index);
+    const openSearchResponse = await openSearchforautoSearch(data, index);
     console.log("openSearchResponse-=-=-=-=-=>", openSearchResponse);
     const command = new InvokeCommand({
       FunctionName: 'arn:aws:lambda:us-east-1:883581233691:function:wobbleAutoSearch-staging',
       InvocationType: "RequestResponse",
-      Payload: JSON.stringify(data),
+      Payload: JSON.stringify(data.payload),
     });
     console.info("command=>>", command)
     lambda
@@ -1328,7 +1333,7 @@ io.on("connection", async (socket) => {
         const responseBuffer = Buffer.from(data.Payload);
         let resultData = await JSON.parse(responseBuffer.toString("utf8"));
         console.log("resultData------------->", resultData);
-        socket.emit("autoComplete", { results: resultData })
+        socket.emit("autoComplete", { results: openSearchResponse })
       })
       .catch((err) => {
         console.error("Error in the autoComplete topic", err);
